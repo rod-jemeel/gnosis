@@ -210,13 +210,43 @@ function ChatPageContent() {
                 </div>
               </div>
             ) : (
-              messages.map((message) => (
-                <ChatMessage
-                  key={message.id}
-                  message={message}
-                  onCitationClick={handleCitationClick}
-                />
-              ))
+              <>
+                {messages.map((message) => (
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    onCitationClick={handleCitationClick}
+                  />
+                ))}
+                {/* Loading skeleton while AI is thinking */}
+                {isLoading && (
+                  <div className="flex gap-3">
+                    <div className="shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                      <Sparkle size={18} className="text-white" weight="bold" />
+                    </div>
+                    <div className="flex flex-col gap-1 max-w-[80%]">
+                      <span className="text-xs font-medium text-muted-foreground px-1">
+                        AetherCore
+                      </span>
+                      <div className="rounded-2xl px-4 py-3 bg-muted/50 border border-border/50 rounded-bl-md">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-1">
+                              <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                              <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                              <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" />
+                            </div>
+                            <span className="text-sm text-muted-foreground">Thinking...</span>
+                          </div>
+                          <Skeleton className="h-4 w-[250px]" />
+                          <Skeleton className="h-4 w-[200px]" />
+                          <Skeleton className="h-4 w-[180px]" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             <div ref={messagesEndRef} />
           </div>
