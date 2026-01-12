@@ -3,44 +3,24 @@
 /**
  * PDF Viewer Component
  *
- * Wrapper for Nutrient Web SDK with page navigation support.
+ * Uses react-pdf (Mozilla PDF.js) for rendering PDFs.
  *
  * Important:
  * - Page numbers in DB/API are 1-based
- * - Viewer navigation uses 0-based page indexes
+ * - This component also uses 1-based page numbers
  */
 
-import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react'
-import { Spinner, Warning } from '@phosphor-icons/react'
+import { useState, useEffect, useImperativeHandle, forwardRef, useCallback } from 'react'
+import { Document, Page, pdfjs } from 'react-pdf'
+import { Spinner, Warning, CaretLeft, CaretRight } from '@phosphor-icons/react'
+import { Button } from '@/components/ui/button'
 import { getFileUrl, getAuthHeaders } from '@/lib/api'
 
-// Type declarations for Nutrient Web SDK
-declare global {
-  interface Window {
-    NutrientViewer: {
-      load: (config: {
-        container: HTMLElement
-        document: string
-        useCDN?: boolean
-        licenseKey?: string
-        baseUrl?: string
-      }) => Promise<NutrientInstance>
-      unload: (container: HTMLElement) => void
-    }
-  }
-}
+import 'react-pdf/dist/Page/AnnotationLayer.css'
+import 'react-pdf/dist/Page/TextLayer.css'
 
-interface NutrientInstance {
-  setViewState: (fn: (viewState: ViewState) => ViewState) => void
-  addEventListener: (event: string, handler: (...args: unknown[]) => void) => void
-  removeEventListener: (event: string, handler: (...args: unknown[]) => void) => void
-  totalPageCount: number
-}
-
-interface ViewState {
-  set: (key: string, value: number) => ViewState
-  get: (key: string) => number
-}
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 export interface PdfViewerRef {
   goToPage: (pageNumber: number) => void
@@ -55,112 +35,150 @@ interface PdfViewerProps {
 
 export const PdfViewer = forwardRef<PdfViewerRef, PdfViewerProps>(
   function PdfViewer({ documentId, initialPage = 1, className }, ref) {
-    const containerRef = useRef<HTMLDivElement>(null)
-    const instanceRef = useRef<NutrientInstance | null>(null)
+    const [numPages, setNumPages] = useState<number>(0)
+    const [currentPage, setCurrentPage] = useState(initialPage)
+    const [pdfUrl, setPdfUrl] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [currentPage, setCurrentPage] = useState(initialPage)
 
     // Expose methods via ref
     useImperativeHandle(ref, () => ({
       goToPage: (pageNumber: number) => {
-        if (instanceRef.current) {
-          // Convert 1-based page number to 0-based index
-          const pageIndex = pageNumber - 1
-          instanceRef.current.setViewState((v) => v.set('currentPageIndex', pageIndex))
-          setCurrentPage(pageNumber)
-        }
+        const page = Math.max(1, Math.min(pageNumber, numPages))
+        setCurrentPage(page)
       },
       getCurrentPage: () => currentPage,
     }))
 
-    // Load viewer
+    // Fetch signed URL on mount
+    const fetchPdfUrl = useCallback(async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const fileUrl = getFileUrl(documentId)
+        const headers = getAuthHeaders()
+
+        const response = await fetch(fileUrl, { headers })
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            throw new Error('Unauthorized: Please sign in to view this document')
+          }
+          if (response.status === 404) {
+            throw new Error('Document not found')
+          }
+          throw new Error(`Failed to get PDF: ${response.status}`)
+        }
+
+        const { url } = await response.json()
+        setPdfUrl(url)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load PDF')
+        setLoading(false)
+      }
+    }, [documentId])
+
+    // Fetch URL when documentId changes
     useEffect(() => {
-      const container = containerRef.current
-      if (!container || !documentId) return
+      fetchPdfUrl()
+    }, [fetchPdfUrl])
 
-      let mounted = true
-
-      const loadViewer = async () => {
-        try {
-          setLoading(true)
-          setError(null)
-
-          // Check if NutrientViewer is available
-          if (!window.NutrientViewer) {
-            throw new Error('Nutrient SDK not loaded')
-          }
-
-          // Get file URL with auth
-          const fileUrl = getFileUrl(documentId)
-          const headers = getAuthHeaders()
-
-          // Load the viewer
-          const instance = await window.NutrientViewer.load({
-            container,
-            document: fileUrl,
-            useCDN: true,
-            // Add auth header via fetch interceptor or proxy
-          })
-
-          if (!mounted) {
-            window.NutrientViewer.unload(container)
-            return
-          }
-
-          instanceRef.current = instance
-
-          // Go to initial page if specified
-          if (initialPage > 1) {
-            instance.setViewState((v) => v.set('currentPageIndex', initialPage - 1))
-          }
-
-          setLoading(false)
-        } catch (err) {
-          if (mounted) {
-            setError(err instanceof Error ? err.message : 'Failed to load PDF')
-            setLoading(false)
-          }
-        }
+    const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+      setNumPages(numPages)
+      setLoading(false)
+      // Go to initial page after load
+      if (initialPage > 1 && initialPage <= numPages) {
+        setCurrentPage(initialPage)
       }
+    }
 
-      loadViewer()
+    const onDocumentLoadError = (err: Error) => {
+      console.error('PDF load error:', err)
+      setError('Failed to load PDF document')
+      setLoading(false)
+    }
 
-      return () => {
-        mounted = false
-        if (container && window.NutrientViewer) {
-          window.NutrientViewer.unload(container)
-        }
-        instanceRef.current = null
-      }
-    }, [documentId, initialPage])
+    const goToPrevPage = () => {
+      setCurrentPage((prev) => Math.max(1, prev - 1))
+    }
 
-    // Navigate to page when documentId changes
-    const goToPage = useCallback((pageNumber: number) => {
-      if (instanceRef.current) {
-        instanceRef.current.setViewState((v) => v.set('currentPageIndex', pageNumber - 1))
-        setCurrentPage(pageNumber)
-      }
-    }, [])
+    const goToNextPage = () => {
+      setCurrentPage((prev) => Math.min(numPages, prev + 1))
+    }
 
     if (error) {
       return (
         <div className={`flex flex-col items-center justify-center h-full bg-muted/30 ${className}`}>
           <Warning size={48} className="text-destructive mb-4" />
           <p className="text-destructive font-medium mb-2">Failed to load PDF</p>
-          <p className="text-sm text-muted-foreground">{error}</p>
+          <p className="text-sm text-muted-foreground text-center px-4">{error}</p>
         </div>
       )
     }
 
     return (
-      <div className={`relative h-full ${className}`}>
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-            <Spinner size={32} className="animate-spin text-primary" />
-          </div>
-        )}
-        <div ref={containerRef} className="w-full h-full" />
+      <div className={`flex flex-col h-full ${className}`}>
+        {/* Page Navigation */}
+        <div className="flex items-center justify-center gap-2 py-2 border-b bg-background">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goToPrevPage}
+            disabled={currentPage <= 1}
+            className="h-8 w-8 p-0"
+          >
+            <CaretLeft size={16} />
+          </Button>
+          <span className="text-sm text-muted-foreground min-w-[100px] text-center">
+            Page {currentPage} of {numPages || '...'}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goToNextPage}
+            disabled={currentPage >= numPages}
+            className="h-8 w-8 p-0"
+          >
+            <CaretRight size={16} />
+          </Button>
+        </div>
+
+        {/* PDF Content */}
+        <div className="flex-1 overflow-auto flex justify-center bg-muted/30 p-4">
+          {loading && !pdfUrl && (
+            <div className="flex flex-col items-center justify-center">
+              <Spinner size={32} className="animate-spin text-primary mb-2" />
+              <p className="text-xs text-muted-foreground">Loading PDF...</p>
+            </div>
+          )}
+
+          {pdfUrl && (
+            <Document
+              file={pdfUrl}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading={
+                <div className="flex flex-col items-center justify-center">
+                  <Spinner size={32} className="animate-spin text-primary mb-2" />
+                  <p className="text-xs text-muted-foreground">Loading PDF...</p>
+                </div>
+              }
+            >
+              <Page
+                pageNumber={currentPage}
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+                className="shadow-lg"
+                loading={
+                  <div className="flex items-center justify-center h-[800px] w-[600px] bg-white">
+                    <Spinner size={24} className="animate-spin text-primary" />
+                  </div>
+                }
+              />
+            </Document>
+          )}
+        </div>
       </div>
     )
   }
