@@ -70,6 +70,54 @@ export interface ChatMessage {
   timestamp: Date
 }
 
+// Chat Session types
+export interface ChatSession {
+  id: string
+  title: string
+  documentId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ChatSessionListResponse {
+  data: ChatSession[]
+  total: number
+  limit: number
+  offset: number
+  hasMore: boolean
+}
+
+export interface CreateChatSessionRequest {
+  title: string
+  documentId?: string
+}
+
+export interface UpdateChatSessionRequest {
+  title: string
+}
+
+// Tag types
+export interface Tag {
+  id: string
+  name: string
+  color: string | null
+  documentCount?: number
+  createdAt: string
+}
+
+export interface TagListResponse {
+  data: Tag[]
+}
+
+export interface CreateTagRequest {
+  name: string
+  color?: string
+}
+
+export interface AssignTagRequest {
+  tagId: string
+}
+
 // API Error
 export interface ApiError {
   error: string
