@@ -11,16 +11,33 @@
  */
 
 import { useState, useEffect, useImperativeHandle, forwardRef, useCallback } from 'react'
-import { Document, Page, pdfjs } from 'react-pdf'
+import dynamic from 'next/dynamic'
 import { Spinner, Warning, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { getFileUrl, getAuthHeaders } from '@/lib/api'
 
-import 'react-pdf/dist/Page/AnnotationLayer.css'
-import 'react-pdf/dist/Page/TextLayer.css'
+// Dynamically import react-pdf components (client-only)
+const Document = dynamic(
+  () => import('react-pdf').then((mod) => mod.Document),
+  { ssr: false }
+)
+const Page = dynamic(
+  () => import('react-pdf').then((mod) => mod.Page),
+  { ssr: false }
+)
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+// Import styles only on client
+if (typeof window !== 'undefined') {
+  import('react-pdf/dist/Page/AnnotationLayer.css')
+  import('react-pdf/dist/Page/TextLayer.css')
+}
+
+// Configure PDF.js worker (client-only)
+if (typeof window !== 'undefined') {
+  import('react-pdf').then((pdfjs) => {
+    pdfjs.pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.pdfjs.version}/build/pdf.worker.min.mjs`
+  })
+}
 
 export interface PdfViewerRef {
   goToPage: (pageNumber: number) => void
