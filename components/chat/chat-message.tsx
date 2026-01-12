@@ -3,7 +3,7 @@
 /**
  * Chat Message Component
  *
- * Displays a single chat message with citation links.
+ * Displays a single chat message with citation links and markdown rendering.
  */
 
 import { User, Robot, BookOpen, ArrowSquareOut } from '@phosphor-icons/react'
@@ -11,6 +11,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ChatMessage as ChatMessageType, Citation } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import ReactMarkdown from 'react-markdown'
+import type { Components } from 'react-markdown'
 
 interface ChatMessageProps {
   message: ChatMessageType
@@ -18,15 +20,48 @@ interface ChatMessageProps {
 }
 
 /**
- * Parse message content and replace [C1], [C2] with clickable badges
+ * Create citation badge component
  */
-function renderContentWithCitations(
-  content: string,
+function CitationBadge({
+  citation,
+  citationIndex,
+  onCitationClick,
+}: {
+  citation: Citation
+  citationIndex: number
+  onCitationClick?: (citation: Citation) => void
+}) {
+  return (
+    <button
+      onClick={() => onCitationClick?.(citation)}
+      className="inline-flex items-center mx-0.5 group/cite"
+      title={`${citation.documentName}, Page ${citation.pageNumber}`}
+    >
+      <Badge
+        variant="secondary"
+        className={cn(
+          'cursor-pointer transition-all duration-200',
+          'bg-primary/10 text-primary border border-primary/20',
+          'hover:bg-primary hover:text-primary-foreground hover:scale-105',
+          'text-[10px] font-semibold px-1.5 py-0'
+        )}
+      >
+        {citationIndex}
+      </Badge>
+    </button>
+  )
+}
+
+/**
+ * Parse text and replace [C1], [C2] with citation badges
+ */
+function parseTextWithCitations(
+  text: string,
   citations: Citation[] | undefined,
   onCitationClick?: (citation: Citation) => void
 ): React.ReactNode[] {
   if (!citations || citations.length === 0) {
-    return [content]
+    return [text]
   }
 
   const parts: React.ReactNode[] = []
@@ -34,10 +69,10 @@ function renderContentWithCitations(
   let lastIndex = 0
   let match
 
-  while ((match = citationPattern.exec(content)) !== null) {
+  while ((match = citationPattern.exec(text)) !== null) {
     // Add text before citation
     if (match.index > lastIndex) {
-      parts.push(content.slice(lastIndex, match.index))
+      parts.push(text.slice(lastIndex, match.index))
     }
 
     // Find the citation
@@ -46,24 +81,12 @@ function renderContentWithCitations(
 
     if (citation) {
       parts.push(
-        <button
+        <CitationBadge
           key={`citation-${match.index}`}
-          onClick={() => onCitationClick?.(citation)}
-          className="inline-flex items-center mx-0.5 group/cite"
-          title={`${citation.documentName}, Page ${citation.pageNumber}`}
-        >
-          <Badge
-            variant="secondary"
-            className={cn(
-              'cursor-pointer transition-all duration-200',
-              'bg-primary/10 text-primary border border-primary/20',
-              'hover:bg-primary hover:text-primary-foreground hover:scale-105',
-              'text-[10px] font-semibold px-1.5 py-0'
-            )}
-          >
-            {citationIndex}
-          </Badge>
-        </button>
+          citation={citation}
+          citationIndex={citationIndex}
+          onCitationClick={onCitationClick}
+        />
       )
     } else {
       parts.push(match[0])
@@ -73,11 +96,108 @@ function renderContentWithCitations(
   }
 
   // Add remaining text
-  if (lastIndex < content.length) {
-    parts.push(content.slice(lastIndex))
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex))
   }
 
   return parts
+}
+
+/**
+ * Render markdown content with citation badges
+ */
+function renderContentWithCitations(
+  content: string,
+  citations: Citation[] | undefined,
+  onCitationClick?: (citation: Citation) => void
+): React.ReactNode {
+  // Custom markdown components that preserve citation parsing
+  const components: Components = {
+    // Override paragraph to handle citations
+    p: ({ children }) => {
+      const processed = processChildren(children, citations, onCitationClick)
+      return <p className="mb-3 last:mb-0">{processed}</p>
+    },
+    // Override strong (bold) to handle citations
+    strong: ({ children }) => {
+      const processed = processChildren(children, citations, onCitationClick)
+      return <strong className="font-semibold">{processed}</strong>
+    },
+    // Override em (italic)
+    em: ({ children }) => {
+      const processed = processChildren(children, citations, onCitationClick)
+      return <em>{processed}</em>
+    },
+    // Lists
+    ul: ({ children }) => (
+      <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>
+    ),
+    ol: ({ children }) => (
+      <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>
+    ),
+    li: ({ children }) => {
+      const processed = processChildren(children, citations, onCitationClick)
+      return <li className="leading-relaxed">{processed}</li>
+    },
+    // Code blocks
+    code: ({ className, children }) => {
+      const isInline = !className
+      if (isInline) {
+        return (
+          <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">
+            {children}
+          </code>
+        )
+      }
+      return (
+        <code className={cn('block bg-muted p-3 rounded-lg text-sm font-mono overflow-x-auto', className)}>
+          {children}
+        </code>
+      )
+    },
+    // Headings
+    h1: ({ children }) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
+    h2: ({ children }) => <h2 className="text-lg font-bold mb-2">{children}</h2>,
+    h3: ({ children }) => <h3 className="text-base font-semibold mb-2">{children}</h3>,
+  }
+
+  return (
+    <ReactMarkdown components={components}>
+      {content}
+    </ReactMarkdown>
+  )
+}
+
+/**
+ * Process React children to extract text and add citation badges
+ */
+function processChildren(
+  children: React.ReactNode,
+  citations: Citation[] | undefined,
+  onCitationClick?: (citation: Citation) => void
+): React.ReactNode {
+  if (!children) return children
+
+  // Handle array of children
+  if (Array.isArray(children)) {
+    return children.map((child, index) => {
+      if (typeof child === 'string') {
+        return (
+          <span key={index}>
+            {parseTextWithCitations(child, citations, onCitationClick)}
+          </span>
+        )
+      }
+      return child
+    })
+  }
+
+  // Handle single string child
+  if (typeof children === 'string') {
+    return parseTextWithCitations(children, citations, onCitationClick)
+  }
+
+  return children
 }
 
 export function ChatMessage({ message, onCitationClick }: ChatMessageProps) {
