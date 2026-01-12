@@ -7,7 +7,8 @@
  */
 
 import { useState } from 'react'
-import { Key, Brain, Database, Check } from '@phosphor-icons/react'
+import { useTheme } from 'next-themes'
+import { Key, Brain, Database, Check, Sun, Moon, Desktop } from '@phosphor-icons/react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -16,6 +17,7 @@ import { Field, FieldLabel } from '@/components/ui/field'
 
 export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
+  const { theme, setTheme } = useTheme()
 
   const handleSave = () => {
     // TODO: Implement settings save
@@ -88,6 +90,53 @@ export default function SettingsPage() {
             <p className="text-xs text-muted-foreground">
               Leave empty to use the default shared vector store.
             </p>
+          </CardContent>
+        </Card>
+
+        {/* Appearance */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Sun size={24} className="text-primary" />
+              <CardTitle>Appearance</CardTitle>
+            </div>
+            <CardDescription>
+              Customize the look and feel of the application.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Field>
+              <FieldLabel>Theme</FieldLabel>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  variant={theme === 'light' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTheme('light')}
+                  className="flex-1"
+                >
+                  <Sun size={16} className="mr-2" />
+                  Light
+                </Button>
+                <Button
+                  variant={theme === 'dark' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTheme('dark')}
+                  className="flex-1"
+                >
+                  <Moon size={16} className="mr-2" />
+                  Dark
+                </Button>
+                <Button
+                  variant={theme === 'system' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTheme('system')}
+                  className="flex-1"
+                >
+                  <Desktop size={16} className="mr-2" />
+                  System
+                </Button>
+              </div>
+            </Field>
           </CardContent>
         </Card>
 
