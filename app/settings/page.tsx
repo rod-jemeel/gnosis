@@ -6,21 +6,55 @@
  * Configuration for API keys and preferences.
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
-import { Key, Brain, Database, Check, Sun, Moon, Desktop } from '@phosphor-icons/react'
+import { Key, Brain, Database, Check, Sun, Moon, Desktop, Lightning } from '@phosphor-icons/react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Field, FieldLabel } from '@/components/ui/field'
 
+/**
+ * Popular OpenRouter models for the dropdown hint
+ */
+const POPULAR_MODELS = [
+  'google/gemini-3-flash-preview',
+  'google/gemini-2.5-pro-preview-03-25',
+  'anthropic/claude-sonnet-4',
+  'openai/gpt-4o',
+  'openai/gpt-4o-mini',
+  'meta-llama/llama-3.3-70b-instruct',
+]
+
 export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const { theme, setTheme } = useTheme()
 
+  // OpenRouter settings
+  const [openrouterKey, setOpenrouterKey] = useState('')
+  const [openrouterModel, setOpenrouterModel] = useState('')
+
+  // OpenAI settings
+  const [openaiKey, setOpenaiKey] = useState('')
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedOpenrouterKey = localStorage.getItem('aethercore_openrouter_key') || ''
+    const savedOpenrouterModel = localStorage.getItem('aethercore_openrouter_model') || ''
+    const savedOpenaiKey = localStorage.getItem('aethercore_openai_key') || ''
+
+    setOpenrouterKey(savedOpenrouterKey)
+    setOpenrouterModel(savedOpenrouterModel)
+    setOpenaiKey(savedOpenaiKey)
+  }, [])
+
   const handleSave = () => {
-    // TODO: Implement settings save
+    // Save to localStorage
+    localStorage.setItem('aethercore_openrouter_key', openrouterKey)
+    localStorage.setItem('aethercore_openrouter_model', openrouterModel)
+    localStorage.setItem('aethercore_openai_key', openaiKey)
+
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -35,24 +69,74 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6">
-        {/* LLM API Keys */}
+        {/* OpenRouter (Default) */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Brain size={24} className="text-primary" />
-              <CardTitle>LLM Provider</CardTitle>
+              <Lightning size={24} className="text-primary" />
+              <CardTitle>OpenRouter (Default)</CardTitle>
             </div>
             <CardDescription>
-              Configure your OpenAI API key for chat and embeddings.
+              Use your own OpenRouter API key to access 100+ models including Gemini, Claude, GPT-4, and Llama.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Field>
-              <FieldLabel>OpenAI API Key</FieldLabel>
+              <FieldLabel>OpenRouter API Key (Optional)</FieldLabel>
+              <Input
+                type="password"
+                placeholder="sk-or-v1-..."
+                autoComplete="off"
+                value={openrouterKey}
+                onChange={(e) => setOpenrouterKey(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Get your API key from{' '}
+                <a
+                  href="https://openrouter.ai/keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  openrouter.ai/keys
+                </a>
+              </p>
+            </Field>
+            <Field>
+              <FieldLabel>Model (Optional)</FieldLabel>
+              <Input
+                type="text"
+                placeholder="google/gemini-3-flash-preview"
+                value={openrouterModel}
+                onChange={(e) => setOpenrouterModel(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Popular models: {POPULAR_MODELS.slice(0, 3).join(', ')}
+              </p>
+            </Field>
+          </CardContent>
+        </Card>
+
+        {/* OpenAI (Alternative) */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Brain size={24} className="text-primary" />
+              <CardTitle>OpenAI (Alternative)</CardTitle>
+            </div>
+            <CardDescription>
+              Use your own OpenAI API key directly for GPT models.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Field>
+              <FieldLabel>OpenAI API Key (Optional)</FieldLabel>
               <Input
                 type="password"
                 placeholder="sk-..."
                 autoComplete="off"
+                value={openaiKey}
+                onChange={(e) => setOpenaiKey(e.target.value)}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Used for chat completions and text embeddings.
