@@ -39,26 +39,27 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
   )
 
   return (
-    <div className="flex gap-2 items-end">
+    <div className="relative flex items-end border border-input bg-background rounded-lg shadow-sm focus-within:ring-1 focus-within:ring-ring focus-within:border-ring">
       <Textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={placeholder || 'Ask a question about your documents...'}
         disabled={disabled}
-        className="min-h-[60px] max-h-[200px] resize-none"
-        rows={2}
+        className="min-h-[52px] max-h-[200px] resize-none border-0 focus-visible:ring-0 focus-visible:border-0 pr-12 rounded-lg"
+        rows={1}
       />
       <Button
         onClick={handleSend}
         disabled={disabled || !value.trim()}
-        size="lg"
-        className="shrink-0"
+        size="icon"
+        variant={value.trim() ? "default" : "ghost"}
+        className="absolute right-2 bottom-2 h-8 w-8 shrink-0"
       >
         {disabled ? (
-          <Spinner size={20} className="animate-spin" />
+          <Spinner size={18} className="animate-spin" />
         ) : (
-          <PaperPlaneTilt size={20} />
+          <PaperPlaneTilt size={18} weight={value.trim() ? "fill" : "regular"} />
         )}
       </Button>
     </div>

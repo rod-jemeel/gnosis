@@ -6,8 +6,8 @@
  * Displays a single chat message with citation links.
  */
 
-import { User, Robot } from '@phosphor-icons/react'
-import { Card, CardContent } from '@/components/ui/card'
+import { User, Robot, BookOpen, ArrowSquareOut } from '@phosphor-icons/react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ChatMessage as ChatMessageType, Citation } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -49,12 +49,17 @@ function renderContentWithCitations(
         <button
           key={`citation-${match.index}`}
           onClick={() => onCitationClick?.(citation)}
-          className="inline-flex items-center"
+          className="inline-flex items-center mx-0.5 group/cite"
           title={`${citation.documentName}, Page ${citation.pageNumber}`}
         >
           <Badge
             variant="secondary"
-            className="mx-0.5 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors text-xs"
+            className={cn(
+              'cursor-pointer transition-all duration-200',
+              'bg-primary/10 text-primary border border-primary/20',
+              'hover:bg-primary hover:text-primary-foreground hover:scale-105',
+              'text-[10px] font-semibold px-1.5 py-0'
+            )}
           >
             {citationIndex}
           </Badge>
@@ -81,29 +86,45 @@ export function ChatMessage({ message, onCitationClick }: ChatMessageProps) {
   return (
     <div
       className={cn(
-        'flex gap-3',
+        'flex gap-3 group',
         isUser ? 'flex-row-reverse' : 'flex-row'
       )}
     >
       {/* Avatar */}
-      <div
-        className={cn(
-          'shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-          isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'
-        )}
-      >
-        {isUser ? <User size={18} /> : <Robot size={18} />}
-      </div>
+      <Avatar className={cn(
+        'shrink-0 w-9 h-9 ring-2 ring-offset-2 ring-offset-background',
+        isUser
+          ? 'bg-primary text-primary-foreground ring-primary/20'
+          : 'bg-gradient-to-br from-violet-500 to-purple-600 text-white ring-purple-500/20'
+      )}>
+        <AvatarFallback className={cn(
+          'text-sm font-medium',
+          isUser ? 'bg-primary text-primary-foreground' : 'bg-transparent'
+        )}>
+          {isUser ? <User size={18} weight="bold" /> : <Robot size={18} weight="bold" />}
+        </AvatarFallback>
+      </Avatar>
 
-      {/* Message */}
-      <Card
-        className={cn(
-          'max-w-[80%]',
-          isUser ? 'bg-primary text-primary-foreground' : 'bg-muted'
-        )}
-      >
-        <CardContent className="p-3">
-          <div className="text-sm whitespace-pre-wrap">
+      {/* Message Content */}
+      <div className={cn('flex flex-col gap-1 max-w-[80%]', isUser && 'items-end')}>
+        {/* Sender label */}
+        <span className="text-xs font-medium text-muted-foreground px-1">
+          {isUser ? 'You' : 'AetherCore'}
+        </span>
+
+        {/* Message bubble */}
+        <div
+          className={cn(
+            'rounded-2xl px-4 py-3 shadow-sm',
+            isUser
+              ? 'bg-primary text-primary-foreground rounded-br-md'
+              : 'bg-muted/50 border border-border/50 rounded-bl-md'
+          )}
+        >
+          <div className={cn(
+            'text-sm leading-relaxed whitespace-pre-wrap',
+            !isUser && 'text-foreground'
+          )}>
             {isUser
               ? message.content
               : renderContentWithCitations(
@@ -112,27 +133,52 @@ export function ChatMessage({ message, onCitationClick }: ChatMessageProps) {
                   onCitationClick
                 )}
           </div>
+        </div>
 
-          {/* Citation list for assistant messages */}
-          {!isUser && message.citations && message.citations.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-border/50">
-              <p className="text-xs text-muted-foreground mb-2">Sources:</p>
-              <div className="flex flex-wrap gap-1">
-                {message.citations.map((citation) => (
-                  <button
-                    key={citation.index}
-                    onClick={() => onCitationClick?.(citation)}
-                    className="text-xs bg-background/50 hover:bg-background px-2 py-1 rounded transition-colors"
-                    title={citation.text}
-                  >
-                    [{citation.index}] {citation.documentName}, p.{citation.pageNumber}
-                  </button>
-                ))}
-              </div>
+        {/* Citation list for assistant messages */}
+        {!isUser && message.citations && message.citations.length > 0 && (
+          <div className="mt-2 p-3 rounded-xl bg-muted/30 border border-border/50 max-w-full">
+            <div className="flex items-center gap-2 mb-2">
+              <BookOpen size={14} className="text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">
+                Sources ({message.citations.length})
+              </span>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <div className="flex flex-wrap gap-2">
+              {message.citations.map((citation) => (
+                <button
+                  key={citation.index}
+                  onClick={() => onCitationClick?.(citation)}
+                  className={cn(
+                    'group/source flex items-center gap-2 px-3 py-1.5 rounded-lg',
+                    'bg-background border border-border/50',
+                    'hover:border-primary/30 hover:bg-primary/5',
+                    'transition-all duration-200'
+                  )}
+                  title={citation.text}
+                >
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary text-[10px] px-1.5 py-0 font-bold"
+                  >
+                    {citation.index}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground group-hover/source:text-foreground transition-colors truncate max-w-[150px]">
+                    {citation.documentName}
+                  </span>
+                  <span className="text-xs font-medium text-primary">
+                    p.{citation.pageNumber}
+                  </span>
+                  <ArrowSquareOut
+                    size={12}
+                    className="text-muted-foreground group-hover/source:text-primary transition-colors"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
