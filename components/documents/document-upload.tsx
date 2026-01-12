@@ -7,9 +7,10 @@
  */
 
 import { useState, useCallback } from 'react'
-import { Upload, File, X, Check, Spinner } from '@phosphor-icons/react'
+import { CloudArrowUp, FilePdf, X, Check, Spinner, Warning, ArrowClockwise } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
 import { uploadDocument, waitForDocumentReady } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
@@ -22,6 +23,14 @@ interface UploadState {
 
 interface DocumentUploadProps {
   onUploadComplete?: (documentId: string) => void
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
 }
 
 export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
@@ -132,17 +141,25 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
       {/* Drop Zone */}
       <Card
         className={cn(
-          'border-2 border-dashed transition-colors cursor-pointer',
+          'relative overflow-hidden border-2 border-dashed transition-all duration-300 cursor-pointer group',
           dragActive
-            ? 'border-primary bg-primary/5'
-            : 'border-muted-foreground/25 hover:border-primary/50'
+            ? 'border-primary bg-primary/5 scale-[1.01]'
+            : 'border-border hover:border-primary/50 hover:bg-muted/30'
         )}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
       >
-        <CardContent className="flex flex-col items-center justify-center py-12">
+        {/* Background gradient on drag */}
+        <div
+          className={cn(
+            'absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5 transition-opacity duration-300',
+            dragActive ? 'opacity-100' : 'opacity-0'
+          )}
+        />
+
+        <CardContent className="relative flex flex-col items-center justify-center py-12 md:py-16">
           <input
             type="file"
             accept="application/pdf"
@@ -155,12 +172,21 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
             htmlFor="file-upload"
             className="flex flex-col items-center cursor-pointer"
           >
-            <Upload size={48} className="text-muted-foreground mb-4" />
-            <p className="text-lg font-medium mb-1">
-              Drop PDF files here or click to upload
+            <div
+              className={cn(
+                'w-16 h-16 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300',
+                dragActive
+                  ? 'bg-primary text-primary-foreground scale-110'
+                  : 'bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-105'
+              )}
+            >
+              <CloudArrowUp size={32} weight="duotone" />
+            </div>
+            <p className="text-lg font-semibold mb-2 text-center">
+              {dragActive ? 'Drop your files here' : 'Drop PDF files here or click to upload'}
             </p>
-            <p className="text-sm text-muted-foreground">
-              Supports multiple files. Max 50MB per file.
+            <p className="text-sm text-muted-foreground text-center">
+              Supports multiple files up to 50MB each
             </p>
           </label>
         </CardContent>
@@ -168,43 +194,102 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
 
       {/* Upload Progress */}
       {uploads.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Uploads ({uploads.filter(u => u.status === 'ready').length}/{uploads.length})
+            </h3>
+            {uploads.every(u => u.status === 'ready' || u.status === 'failed') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setUploads([])}
+                className="text-xs h-7"
+              >
+                Clear all
+              </Button>
+            )}
+          </div>
+
           {uploads.map((upload, index) => (
-            <Card key={index} className="p-3">
-              <div className="flex items-center gap-3">
-                <File size={24} className="text-muted-foreground shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {upload.file.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {upload.status === 'uploading' && 'Uploading...'}
-                    {upload.status === 'processing' && 'Processing PDF...'}
-                    {upload.status === 'ready' && 'Ready'}
-                    {upload.status === 'failed' && (
-                      <span className="text-destructive">{upload.error}</span>
-                    )}
-                  </p>
+            <Card
+              key={index}
+              className={cn(
+                'relative overflow-hidden transition-all duration-300',
+                upload.status === 'ready' && 'border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20',
+                upload.status === 'failed' && 'border-destructive/30 bg-destructive/5'
+              )}
+            >
+              {/* Progress bar for uploading/processing */}
+              {(upload.status === 'uploading' || upload.status === 'processing') && (
+                <div className="absolute top-0 left-0 right-0">
+                  <Progress
+                    value={upload.status === 'processing' ? 66 : 33}
+                    className="h-1 rounded-none"
+                  />
                 </div>
-                <div className="shrink-0">
-                  {upload.status === 'uploading' && (
-                    <Spinner size={20} className="animate-spin text-primary" />
-                  )}
-                  {upload.status === 'processing' && (
-                    <Spinner size={20} className="animate-spin text-primary" />
-                  )}
-                  {upload.status === 'ready' && (
-                    <Check size={20} className="text-green-500" />
-                  )}
-                  {upload.status === 'failed' && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeUpload(index)}
-                    >
-                      <X size={16} />
-                    </Button>
-                  )}
+              )}
+
+              <div className={cn('p-4', (upload.status === 'uploading' || upload.status === 'processing') && 'pt-5')}>
+                <div className="flex items-center gap-3">
+                  {/* File icon */}
+                  <div
+                    className={cn(
+                      'w-10 h-10 rounded-lg flex items-center justify-center shrink-0',
+                      upload.status === 'ready'
+                        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        : upload.status === 'failed'
+                        ? 'bg-destructive/10 text-destructive'
+                        : 'bg-primary/10 text-primary'
+                    )}
+                  >
+                    <FilePdf size={20} weight="duotone" />
+                  </div>
+
+                  {/* File info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {upload.file.name}
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{formatBytes(upload.file.size)}</span>
+                      <span>•</span>
+                      {upload.status === 'uploading' && (
+                        <span className="text-primary">Uploading...</span>
+                      )}
+                      {upload.status === 'processing' && (
+                        <span className="text-primary">Processing PDF...</span>
+                      )}
+                      {upload.status === 'ready' && (
+                        <span className="text-emerald-600 dark:text-emerald-400">Ready</span>
+                      )}
+                      {upload.status === 'failed' && (
+                        <span className="text-destructive">{upload.error}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status icon/action */}
+                  <div className="shrink-0">
+                    {(upload.status === 'uploading' || upload.status === 'processing') && (
+                      <Spinner size={20} className="animate-spin text-primary" />
+                    )}
+                    {upload.status === 'ready' && (
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                        <Check size={18} weight="bold" className="text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                    )}
+                    {upload.status === 'failed' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeUpload(index)}
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                      >
+                        <X size={18} />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </Card>
