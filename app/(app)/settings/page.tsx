@@ -26,12 +26,28 @@ import {
   SignOut,
   Eye,
   EyeSlash,
+  Trash,
+  ChartBar,
+  ArrowsClockwise,
 } from '@phosphor-icons/react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Field, FieldLabel } from '@/components/ui/field'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Progress } from '@/components/ui/progress'
 import { useAuth } from '@/lib/auth'
+import { useUsage } from '@/lib/hooks'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -50,6 +66,7 @@ export default function SettingsPage() {
   const searchParams = useSearchParams()
   const { user, signOut } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { usage, loading: usageLoading, refresh: refreshUsage } = useUsage()
   const supabase = createClient()
 
   // Success message from URL (e.g., after email change)
@@ -71,6 +88,10 @@ export default function SettingsPage() {
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [accountError, setAccountError] = useState<string | null>(null)
   const [accountSuccess, setAccountSuccess] = useState<string | null>(null)
+
+  // Delete account state
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -178,6 +199,32 @@ export default function SettingsPage() {
   }
 
   const handleSignOut = async () => {
+    await signOut()
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'DELETE') return
+
+    setDeleteLoading(true)
+    setAccountError(null)
+
+    // Delete user account via Supabase Auth Admin API
+    // Note: This requires a server-side endpoint or Supabase Edge Function
+    // For now, we'll use the client-side delete which works if RLS allows it
+    const { error } = await supabase.rpc('delete_user_account')
+
+    if (error) {
+      // If RPC doesn't exist, show helpful error
+      if (error.message.includes('function') || error.code === '42883') {
+        setAccountError('Account deletion requires server setup. Please contact support.')
+      } else {
+        setAccountError(error.message)
+      }
+      setDeleteLoading(false)
+      return
+    }
+
+    // Sign out after successful deletion
     await signOut()
   }
 
@@ -349,6 +396,99 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Usage */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ChartBar size={24} className="text-primary" />
+                <CardTitle>Usage</CardTitle>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={refreshUsage}
+                disabled={usageLoading}
+                className="h-8 w-8 p-0"
+              >
+                <ArrowsClockwise
+                  size={16}
+                  className={usageLoading ? 'animate-spin' : ''}
+                />
+              </Button>
+            </div>
+            <CardDescription>
+              Monitor your API usage this month.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {usageLoading ? (
+              <div className="space-y-4">
+                <div className="h-4 bg-muted animate-pulse rounded" />
+                <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+              </div>
+            ) : usage ? (
+              <>
+                {/* Requests */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">API Requests</span>
+                    <span className="font-medium">
+                      {usage.requestCount.toLocaleString()} / {usage.monthlyRequestLimit.toLocaleString()}
+                    </span>
+                  </div>
+                  <Progress value={usage.requestPercentage} className="h-2" />
+                  <p className="text-xs text-muted-foreground">
+                    {(usage.monthlyRequestLimit - usage.requestCount).toLocaleString()} requests remaining this month
+                  </p>
+                </div>
+
+                {/* Tokens */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Tokens Used</span>
+                    <span className="font-medium">
+                      {usage.totalTokens.toLocaleString()} / {usage.monthlyTokenLimit.toLocaleString()}
+                    </span>
+                  </div>
+                  <Progress value={usage.tokenPercentage} className="h-2" />
+                  <p className="text-xs text-muted-foreground">
+                    {(usage.monthlyTokenLimit - usage.totalTokens).toLocaleString()} tokens remaining this month
+                  </p>
+                </div>
+
+                {/* Usage Warning */}
+                {(usage.requestPercentage >= 80 || usage.tokenPercentage >= 80) && (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-2">
+                    <Warning size={18} className="text-amber-500 shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-medium text-amber-600 dark:text-amber-400">
+                        Approaching usage limit
+                      </p>
+                      <p className="text-muted-foreground text-xs mt-1">
+                        You've used {Math.max(usage.requestPercentage, usage.tokenPercentage).toFixed(0)}% of your monthly allowance.
+                        Usage resets on the 1st of each month.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Billing Cycle */}
+                <div className="pt-4 border-t border-border">
+                  <p className="text-xs text-muted-foreground">
+                    Usage resets on {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}.
+                    Provide your own API keys below for unlimited usage.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Unable to load usage data. Please try again.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* OpenRouter (Default) */}
         <Card>
           <CardHeader>
@@ -517,6 +657,83 @@ export default function SettingsPage() {
             )}
           </Button>
         </div>
+
+        {/* Danger Zone */}
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Trash size={24} className="text-destructive" />
+              <CardTitle className="text-destructive">Danger Zone</CardTitle>
+            </div>
+            <CardDescription>
+              Irreversible and destructive actions.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg bg-destructive/5">
+              <div>
+                <h4 className="font-medium text-sm">Delete account</h4>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Permanently delete your account and all associated data.
+                </p>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    Delete Account
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-3">
+                      <p>
+                        This action cannot be undone. This will permanently delete your
+                        account and remove all your data including:
+                      </p>
+                      <ul className="list-disc list-inside text-sm space-y-1">
+                        <li>All uploaded documents</li>
+                        <li>Chat history and sessions</li>
+                        <li>Saved settings and preferences</li>
+                        <li>API usage history</li>
+                      </ul>
+                      <div className="pt-2">
+                        <p className="text-sm font-medium text-foreground mb-2">
+                          Type <span className="font-mono bg-muted px-1">DELETE</span> to confirm:
+                        </p>
+                        <Input
+                          value={deleteConfirmation}
+                          onChange={(e) => setDeleteConfirmation(e.target.value)}
+                          placeholder="Type DELETE"
+                          className="font-mono"
+                        />
+                      </div>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setDeleteConfirmation('')}>
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      disabled={deleteConfirmation !== 'DELETE' || deleteLoading}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {deleteLoading ? (
+                        <>
+                          <Spinner className="animate-spin mr-2" size={16} />
+                          Deleting...
+                        </>
+                      ) : (
+                        'Delete my account'
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
