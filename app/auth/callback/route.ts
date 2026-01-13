@@ -67,6 +67,15 @@ export async function GET(request: Request) {
       if (!error) {
         return NextResponse.redirect(`${origin}${next}`)
       }
+    } else if (type === 'magiclink') {
+      // Magic link login
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash,
+        type: 'magiclink',
+      })
+      if (!error) {
+        return NextResponse.redirect(`${origin}${next}`)
+      }
     }
   }
 
