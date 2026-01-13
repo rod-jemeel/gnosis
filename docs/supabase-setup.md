@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS user_limits (
 ALTER TABLE user_limits ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own limits" ON user_limits FOR SELECT USING (auth.uid() = user_id);
 
--- 4. Get Current Month Usage Function
+-- 4. Get Current Month Usage Function (returns defaults for all users)
 CREATE OR REPLACE FUNCTION get_current_month_usage()
 RETURNS TABLE (
   request_count bigint,
@@ -246,23 +246,27 @@ SET search_path = public
 AS $$
 DECLARE
   _user_id uuid;
+  _request_count bigint;
+  _total_tokens bigint;
 BEGIN
   _user_id := auth.uid();
   IF _user_id IS NULL THEN
     RAISE EXCEPTION 'Not authenticated';
   END IF;
 
-  RETURN QUERY
-  SELECT
-    COUNT(ul.id)::bigint as request_count,
-    COALESCE(SUM(ul.tokens_used), 0)::bigint as total_tokens,
-    COALESCE(lim.monthly_request_limit, 1000) as monthly_request_limit,
-    COALESCE(lim.monthly_token_limit, 100000) as monthly_token_limit
-  FROM usage_logs ul
-  FULL OUTER JOIN user_limits lim ON lim.user_id = _user_id
-  WHERE ul.user_id = _user_id
-    AND ul.created_at >= date_trunc('month', now())
-  GROUP BY lim.monthly_request_limit, lim.monthly_token_limit;
+  -- Get usage stats for current month
+  SELECT COUNT(*), COALESCE(SUM(tokens_used), 0)
+  INTO _request_count, _total_tokens
+  FROM usage_logs
+  WHERE user_id = _user_id
+    AND created_at >= date_trunc('month', now());
+
+  -- Always return defaults (1000 requests, 100000 tokens)
+  RETURN QUERY SELECT
+    COALESCE(_request_count, 0)::bigint,
+    COALESCE(_total_tokens, 0)::bigint,
+    1000::integer,
+    100000::integer;
 END;
 $$;
 GRANT EXECUTE ON FUNCTION get_current_month_usage() TO authenticated;
