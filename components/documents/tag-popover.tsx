@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import type { ComponentProps } from 'react'
 import { Tag as TagIcon, Plus, Check, Spinner } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,7 +25,7 @@ import { cn } from '@/lib/utils'
 interface TagPopoverProps {
   documentId: string
   onTagsChange?: () => void
-  trigger?: React.ReactNode
+  trigger?: ComponentProps<typeof PopoverTrigger>['render']
 }
 
 export function TagPopover({ documentId, onTagsChange, trigger }: TagPopoverProps) {
@@ -95,16 +96,17 @@ export function TagPopover({ documentId, onTagsChange, trigger }: TagPopoverProp
     }
   }
 
+  const triggerRender =
+    trigger ?? (
+      <Button variant="ghost" size="sm" className="h-8 px-2">
+        <TagIcon size={14} className="mr-1" />
+        <span className="text-xs">Tags</span>
+      </Button>
+    )
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={trigger || (
-          <Button variant="ghost" size="sm" className="h-8 px-2">
-            <TagIcon size={14} className="mr-1" />
-            <span className="text-xs">Tags</span>
-          </Button>
-        )}
-      />
+      <PopoverTrigger render={triggerRender} />
       <PopoverContent className="w-64 p-3" align="start">
         <div className="space-y-3">
           <p className="text-xs font-medium text-muted-foreground">Assign tags</p>

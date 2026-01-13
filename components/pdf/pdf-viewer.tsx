@@ -26,11 +26,9 @@ const Page = dynamic(
   { ssr: false }
 )
 
-// Import styles only on client
-if (typeof window !== 'undefined') {
-  import('react-pdf/dist/Page/AnnotationLayer.css')
-  import('react-pdf/dist/Page/TextLayer.css')
-}
+// Import react-pdf styles (v9+ paths)
+import 'react-pdf/dist/Page/AnnotationLayer.css'
+import 'react-pdf/dist/Page/TextLayer.css'
 
 // Configure PDF.js worker (client-only)
 if (typeof window !== 'undefined') {

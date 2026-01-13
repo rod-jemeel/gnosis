@@ -26,6 +26,14 @@ export interface UsageLog {
   createdAt: Date
 }
 
+// RPC response type from get_current_month_usage function
+interface UsageRpcResponse {
+  request_count: number
+  total_tokens: number
+  monthly_request_limit: number
+  monthly_token_limit: number
+}
+
 export function useUsage() {
   const [usage, setUsage] = useState<UsageData | null>(null)
   const [recentLogs, setRecentLogs] = useState<UsageLog[]>([])
@@ -42,7 +50,7 @@ export function useUsage() {
       // Fetch current month usage via RPC
       const { data: usageData, error: usageError } = await supabase
         .rpc('get_current_month_usage')
-        .single()
+        .single<UsageRpcResponse>()
 
       if (usageError) {
         // If function doesn't exist, return defaults

@@ -28,7 +28,14 @@ const defaultColors = [
   { bg: 'bg-cyan-100 dark:bg-cyan-950', text: 'text-cyan-700 dark:text-cyan-300', border: 'border-cyan-200 dark:border-cyan-800' },
 ]
 
-function getTagColor(tag: Tag) {
+type TagColorResult = {
+  bg: string
+  text: string
+  border: string
+  style?: React.CSSProperties
+}
+
+function getTagColor(tag: Tag): TagColorResult {
   if (tag.color) {
     // Use custom color with lower opacity for background
     return {
