@@ -64,7 +64,7 @@ export default function LoginPage() {
                 <Cube size={24} weight="fill" className="text-white" />
               </div>
             </div>
-            <span className="text-2xl font-bold">AetherCore</span>
+            <span className="text-2xl font-bold">Gnosis</span>
           </Link>
         </div>
 
@@ -159,7 +159,7 @@ export default function LoginPage() {
                 </div>
                 <div className="relative flex justify-center text-xs">
                   <span className="bg-card px-3 text-muted-foreground">
-                    New to AetherCore?
+                    New to Gnosis?
                   </span>
                 </div>
               </div>

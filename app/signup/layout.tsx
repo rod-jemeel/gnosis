@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Sign Up - AetherCore',
+  title: 'Sign Up - Gnosis',
   description: 'Create your account',
 }
 

@@ -229,7 +229,7 @@ export function ChatMessage({ message, onCitationClick }: ChatMessageProps) {
       <div className={cn('flex flex-col gap-1 max-w-[80%]', isUser && 'items-end')}>
         {/* Sender label */}
         <span className="text-xs font-medium text-muted-foreground px-1">
-          {isUser ? 'You' : 'Aether'}
+          {isUser ? 'You' : 'Gnosis'}
         </span>
 
         {/* Message bubble */}

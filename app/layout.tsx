@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'AetherCore',
+  title: 'Gnosis',
   description: 'RAG Q&A over your PDF documents with page-accurate citations',
 }
 

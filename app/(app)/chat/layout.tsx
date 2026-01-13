@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Chat - AetherCore',
+  title: 'Chat - Gnosis',
   description: 'Ask questions about your PDF documents',
 }
 

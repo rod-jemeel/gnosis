@@ -404,7 +404,7 @@ export function AppSidebar() {
       {/* Header - Logo & Toggle */}
       <SidebarHeader className={cn("flex-row items-center py-2", isCollapsed ? "justify-center px-0" : "justify-between")}>
         {isCollapsed ? (
-          <Link href="/" className="flex items-center justify-center" title="AetherCore">
+          <Link href="/" className="flex items-center justify-center" title="Gnosis">
             <div className="flex aspect-square size-7 items-center justify-center bg-primary text-primary-foreground">
               <Cube size={16} weight="fill" />
             </div>
@@ -413,11 +413,11 @@ export function AppSidebar() {
           <>
             <SidebarMenu className="flex-1">
               <SidebarMenuItem>
-                <SidebarMenuButton size="default" render={<Link href="/" />} tooltip="AetherCore">
+                <SidebarMenuButton size="default" render={<Link href="/" />} tooltip="Gnosis">
                   <div className="flex aspect-square size-6 items-center justify-center bg-primary text-primary-foreground shrink-0">
                     <Cube size={14} weight="fill" />
                   </div>
-                  <span className="font-semibold text-xs">AetherCore</span>
+                  <span className="font-semibold text-xs">Gnosis</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

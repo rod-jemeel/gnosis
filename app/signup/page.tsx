@@ -74,7 +74,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Get started with AetherCore</CardDescription>
+          <CardDescription>Get started with Gnosis</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="space-y-4">

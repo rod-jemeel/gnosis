@@ -49,7 +49,7 @@ export function Header() {
               </div>
             </div>
             <span className="text-lg font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-              AetherCore
+              Gnosis
             </span>
           </Link>
 

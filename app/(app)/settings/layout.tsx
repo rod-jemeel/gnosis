@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Settings - AetherCore',
+  title: 'Settings - Gnosis',
   description: 'Configure your API keys and preferences',
 }
 

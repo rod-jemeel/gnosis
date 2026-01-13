@@ -39,7 +39,7 @@ export default function MarketingLayout({
             <div className="w-7 h-7 bg-primary flex items-center justify-center">
               <Cube size={16} weight="fill" className="text-primary-foreground" />
             </div>
-            <span className="font-semibold">AetherCore</span>
+            <span className="font-semibold">Gnosis</span>
           </Link>
 
           <div className="flex items-center gap-3">

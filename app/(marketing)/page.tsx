@@ -216,10 +216,10 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Cube size={16} weight="fill" className="text-primary" />
-            <span className="text-sm font-medium">AetherCore</span>
+            <span className="text-sm font-medium">Gnosis</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} AetherCore. All rights reserved.
+            &copy; {new Date().getFullYear()} Gnosis. All rights reserved.
           </p>
         </div>
       </footer>
