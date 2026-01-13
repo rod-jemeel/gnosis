@@ -10,6 +10,7 @@ import {
   ChatSessionListResponse,
   CreateChatSessionRequest,
   UpdateChatSessionRequest,
+  SessionMessagesResponse,
 } from '../types'
 
 /**
@@ -70,4 +71,13 @@ export async function updateChatSession(
  */
 export async function deleteChatSession(id: string): Promise<void> {
   await del(`/v1/chat-sessions/${id}`)
+}
+
+/**
+ * Get messages for a chat session
+ */
+export async function getSessionMessages(
+  sessionId: string
+): Promise<SessionMessagesResponse> {
+  return get<SessionMessagesResponse>(`/v1/chat-sessions/${sessionId}/messages`)
 }

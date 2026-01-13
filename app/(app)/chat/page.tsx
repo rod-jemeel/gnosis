@@ -1,17 +1,16 @@
 'use client'
 
 /**
- * Chat Page
+ * New Chat Page
  *
- * RAG Q&A interface with PDF viewer and citation navigation.
+ * RAG Q&A interface for starting a new chat session.
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { useRouter } from 'next/navigation'
 import { ChatMessage, ChatInput } from '@/components/chat'
 import { PdfViewer, PdfViewerRef } from '@/components/pdf'
-import { sendQuestion, listDocuments } from '@/lib/api'
+import { sendQuestion, listDocuments, createChatSession } from '@/lib/api'
 import { ChatMessage as ChatMessageType, Citation, Document } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -21,28 +20,22 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select'
 import {
   X,
   FilePdf,
   MagnifyingGlass,
-  Sparkle,
-  CaretDown,
+  Cube,
 } from '@phosphor-icons/react'
-import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth'
 
-function ChatPageContent() {
-  const searchParams = useSearchParams()
-  const initialDocumentId = searchParams.get('documentId')
+export default function NewChatPage() {
+  const router = useRouter()
   const { workspaceId, loading: authLoading } = useAuth()
 
   const [messages, setMessages] = useState<ChatMessageType[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
-    initialDocumentId
-  )
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null)
   const [documents, setDocuments] = useState<Document[]>([])
   const [documentsLoading, setDocumentsLoading] = useState(true)
 
@@ -77,8 +70,15 @@ function ChatPageContent() {
       setIsLoading(true)
 
       try {
+        // Create a new session
+        const session = await createChatSession({
+          title: question.slice(0, 50) + (question.length > 50 ? '...' : ''),
+          documentId: selectedDocumentId || undefined,
+        })
+
         const response = await sendQuestion({
           question,
+          sessionId: session.id,
           documentIds: selectedDocumentId ? [selectedDocumentId] : undefined,
         })
 
@@ -91,12 +91,8 @@ function ChatPageContent() {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        if (response.citations.length > 0 && pdfViewerRef.current) {
-          const firstCitation = response.citations[0]
-          if (!selectedDocumentId || selectedDocumentId === firstCitation.documentId) {
-            setSelectedDocumentId(firstCitation.documentId)
-          }
-        }
+        // Navigate to the session page after getting the response
+        router.push(`/chat/${session.id}`)
       } catch (error) {
         const errorMessage: ChatMessageType = {
           id: `error-${Date.now()}`,
@@ -108,11 +104,10 @@ function ChatPageContent() {
           timestamp: new Date(),
         }
         setMessages((prev) => [...prev, errorMessage])
-      } finally {
         setIsLoading(false)
       }
     },
-    [selectedDocumentId]
+    [selectedDocumentId, router]
   )
 
   const handleCitationClick = useCallback((citation: Citation) => {
@@ -134,14 +129,14 @@ function ChatPageContent() {
             {selectedDocumentId ? (
               <FilePdf size={14} weight="fill" className="text-primary shrink-0" />
             ) : (
-              <MagnifyingGlass size={14} className="shrink-0" />
+              <MagnifyingGlass size={14} className="text-muted-foreground shrink-0" />
             )}
             <Select
               value={selectedDocumentId || 'all'}
               onValueChange={(value) => setSelectedDocumentId(value === 'all' ? null : value)}
             >
-              <SelectTrigger className="h-full border-0 px-0 w-full focus-visible:ring-0">
-                <span className="truncate">
+              <SelectTrigger className="h-full border-0 px-0 w-full focus-visible:ring-0 text-foreground no-underline">
+                <span className="truncate no-underline">
                   {selectedDocumentId
                     ? selectedDocument?.name || 'Loading...'
                     : 'All Documents'}
@@ -178,11 +173,11 @@ function ChatPageContent() {
 
         {/* Messages */}
         <ScrollArea className="flex-1">
-          <div className="max-w-3xl mx-auto px-4 md:px-6 py-4 md:py-6 space-y-6">
+          <div className="max-w-4xl mx-auto px-4 md:px-6 py-4 md:py-6 space-y-6">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-14 h-14 bg-primary/10 flex items-center justify-center mb-6">
-                  <Sparkle size={28} className="text-primary" weight="duotone" />
+                  <Cube size={28} className="text-primary" weight="fill" />
                 </div>
                 <h2 className="text-lg font-semibold mb-2">
                   Ask anything about your documents
@@ -222,11 +217,11 @@ function ChatPageContent() {
                 {isLoading && (
                   <div className="flex gap-3">
                     <div className="shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                      <Sparkle size={18} className="text-white" weight="bold" />
+                      <Cube size={18} className="text-white" weight="fill" />
                     </div>
                     <div className="flex flex-col gap-1 max-w-[80%]">
                       <span className="text-xs font-medium text-muted-foreground px-1">
-                        AetherCore
+                        Aether
                       </span>
                       <div className="rounded-2xl px-4 py-3 bg-muted/50 border border-border/50 rounded-bl-md">
                         <div className="space-y-2">
@@ -254,7 +249,7 @@ function ChatPageContent() {
 
         {/* Input */}
         <div className="bg-background pb-4">
-          <div className="max-w-3xl mx-auto px-4">
+          <div className="max-w-4xl mx-auto px-4">
             <ChatInput onSend={handleSendMessage} disabled={isLoading} />
           </div>
         </div>
@@ -289,26 +284,5 @@ function ChatPageContent() {
         </div>
       )}
     </div>
-  )
-}
-
-export default function ChatPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex h-screen">
-          <div className="flex-1 flex flex-col">
-            <div className="h-12 px-4 border-b flex items-center">
-              <Skeleton className="h-8 w-[280px]" />
-            </div>
-            <div className="flex-1 flex items-center justify-center">
-              <Skeleton className="w-14 h-14" />
-            </div>
-          </div>
-        </div>
-      }
-    >
-      <ChatPageContent />
-    </Suspense>
   )
 }

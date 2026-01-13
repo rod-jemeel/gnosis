@@ -47,6 +47,7 @@ export interface Citation {
 // Chat types
 export interface ChatRequest {
   question: string
+  sessionId?: string
   documentIds?: string[]
   topK?: number
 }
@@ -94,6 +95,21 @@ export interface CreateChatSessionRequest {
 
 export interface UpdateChatSessionRequest {
   title: string
+}
+
+export interface SessionMessage {
+  id: string
+  question: string
+  answer: string
+  model: string
+  citations: Citation[]
+  createdAt: string
+}
+
+export interface SessionMessagesResponse {
+  sessionId: string
+  messages: SessionMessage[]
+  total: number
 }
 
 // Tag types

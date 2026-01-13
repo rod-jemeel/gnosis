@@ -6,7 +6,7 @@
  * Display a document with status and actions.
  */
 
-import { FilePdf, Trash, Chat, Spinner, Warning, Check, Clock, Tag as TagIcon } from '@phosphor-icons/react'
+import { FilePdf, Trash, Chat, Spinner, Warning, Check, Clock, Tag as TagIcon, Eye } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,8 @@ interface DocumentCardProps {
   onChat?: (id: string) => void
   onTagClick?: (tagId: string) => void
   onTagsChange?: () => void
+  onPreview?: (id: string) => void
+  isSelected?: boolean
 }
 
 function formatBytes(bytes: number): string {
@@ -76,7 +78,7 @@ function StatusBadge({ status }: { status: Document['status'] }) {
   }
 }
 
-export function DocumentCard({ document, tags, onDelete, onChat, onTagClick, onTagsChange }: DocumentCardProps) {
+export function DocumentCard({ document, tags, onDelete, onChat, onTagClick, onTagsChange, onPreview, isSelected }: DocumentCardProps) {
   const isReady = document.status === 'ready'
   const isProcessing = document.status === 'processing' || document.status === 'uploaded'
 
@@ -84,7 +86,8 @@ export function DocumentCard({ document, tags, onDelete, onChat, onTagClick, onT
     <Card className={cn(
       'group relative overflow-hidden transition-all duration-300',
       'hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5',
-      'border-border/50 hover:border-primary/20'
+      'border-border/50 hover:border-primary/20',
+      isSelected && 'ring-2 ring-primary border-primary/30'
     )}>
       {/* Subtle gradient accent on hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-purple-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -167,6 +170,21 @@ export function DocumentCard({ document, tags, onDelete, onChat, onTagClick, onT
                       </Button>
                     }
                   />
+                )}
+                {isReady && onPreview && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onPreview(document.id)}
+                    title="Preview PDF"
+                    className={cn(
+                      "h-8 px-2 hover:bg-primary/10 hover:text-primary",
+                      isSelected && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <Eye size={16} className="mr-1" />
+                    <span className="text-xs">View</span>
+                  </Button>
                 )}
                 {isReady && onChat && (
                   <Button

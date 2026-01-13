@@ -270,6 +270,7 @@ function SidebarChatHistory() {
   }
 
   const isCollapsed = state === 'collapsed'
+  const isOnChatRoute = pathname === '/chat' || pathname.startsWith('/chat/')
 
   if (isCollapsed) {
     return (
@@ -286,10 +287,10 @@ function SidebarChatHistory() {
           <SidebarMenuItem>
             <SidebarMenuButton
               render={<Link href="/chat" />}
-              isActive={pathname === '/chat'}
+              isActive={isOnChatRoute}
               tooltip="Chat"
             >
-              <Chat size={18} weight={pathname === '/chat' ? 'fill' : 'regular'} />
+              <Chat size={18} weight={isOnChatRoute ? 'fill' : 'regular'} />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -325,25 +326,29 @@ function SidebarChatHistory() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : (
-            sessions.map((session) => (
-              <SidebarMenuItem key={session.id}>
-                <SidebarMenuButton
-                  render={<Link href="/chat" />}
-                  isActive={pathname === '/chat'}
-                  className="pr-8"
-                >
-                  <Clock size={14} className="shrink-0 text-muted-foreground" />
-                  <span className="truncate text-xs">{session.title}</span>
-                </SidebarMenuButton>
-                <SidebarMenuAction
-                  onClick={(e) => handleDeleteSession(session.id, e)}
-                  showOnHover
-                  className="text-muted-foreground hover:text-destructive"
-                >
-                  <Trash size={12} />
-                </SidebarMenuAction>
-              </SidebarMenuItem>
-            ))
+            sessions.map((session) => {
+              const sessionPath = `/chat/${session.id}`
+              const isActive = pathname === sessionPath
+              return (
+                <SidebarMenuItem key={session.id}>
+                  <SidebarMenuButton
+                    render={<Link href={sessionPath} />}
+                    isActive={isActive}
+                    className="pr-8"
+                  >
+                    <Clock size={14} className="shrink-0 text-muted-foreground" />
+                    <span className="truncate text-xs">{session.title}</span>
+                  </SidebarMenuButton>
+                  <SidebarMenuAction
+                    onClick={(e) => handleDeleteSession(session.id, e)}
+                    showOnHover
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash size={12} />
+                  </SidebarMenuAction>
+                </SidebarMenuItem>
+              )
+            })
           )}
         </SidebarMenu>
       </SidebarGroupContent>
@@ -397,18 +402,28 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       {/* Header - Logo & Toggle */}
-      <SidebarHeader className="flex-row items-center justify-between py-2">
-        <SidebarMenu className="flex-1">
-          <SidebarMenuItem>
-            <SidebarMenuButton size="default" render={<Link href="/" />}>
-              <div className="flex aspect-square size-6 items-center justify-center bg-primary text-primary-foreground">
-                <Cube size={14} weight="fill" />
-              </div>
-              <span className="font-semibold text-xs">AetherCore</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        {!isCollapsed && <SidebarToggle />}
+      <SidebarHeader className={cn("flex-row items-center py-2", isCollapsed ? "justify-center px-0" : "justify-between")}>
+        {isCollapsed ? (
+          <Link href="/" className="flex items-center justify-center" title="AetherCore">
+            <div className="flex aspect-square size-7 items-center justify-center bg-primary text-primary-foreground">
+              <Cube size={16} weight="fill" />
+            </div>
+          </Link>
+        ) : (
+          <>
+            <SidebarMenu className="flex-1">
+              <SidebarMenuItem>
+                <SidebarMenuButton size="default" render={<Link href="/" />} tooltip="AetherCore">
+                  <div className="flex aspect-square size-6 items-center justify-center bg-primary text-primary-foreground shrink-0">
+                    <Cube size={14} weight="fill" />
+                  </div>
+                  <span className="font-semibold text-xs">AetherCore</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <SidebarToggle />
+          </>
+        )}
       </SidebarHeader>
 
       {/* Main Navigation */}

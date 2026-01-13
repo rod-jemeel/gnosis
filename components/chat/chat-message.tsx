@@ -6,7 +6,7 @@
  * Displays a single chat message with citation links and markdown rendering.
  */
 
-import { User, Robot, BookOpen, ArrowSquareOut } from '@phosphor-icons/react'
+import { User, Cube, BookOpen, ArrowSquareOut } from '@phosphor-icons/react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ChatMessage as ChatMessageType, Citation } from '@/lib/types'
@@ -221,7 +221,7 @@ export function ChatMessage({ message, onCitationClick }: ChatMessageProps) {
           'text-sm font-medium',
           isUser ? 'bg-primary text-primary-foreground' : 'bg-transparent'
         )}>
-          {isUser ? <User size={18} weight="bold" /> : <Robot size={18} weight="bold" />}
+          {isUser ? <User size={18} weight="bold" /> : <Cube size={18} weight="fill" className="text-white" />}
         </AvatarFallback>
       </Avatar>
 
@@ -229,7 +229,7 @@ export function ChatMessage({ message, onCitationClick }: ChatMessageProps) {
       <div className={cn('flex flex-col gap-1 max-w-[80%]', isUser && 'items-end')}>
         {/* Sender label */}
         <span className="text-xs font-medium text-muted-foreground px-1">
-          {isUser ? 'You' : 'AetherCore'}
+          {isUser ? 'You' : 'Aether'}
         </span>
 
         {/* Message bubble */}
