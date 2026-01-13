@@ -82,14 +82,11 @@ export default function LoginPage() {
 
         <div className="w-full max-w-md">
           <div className="flex justify-center mb-8">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 rounded-xl blur-md group-hover:bg-primary/30 transition-colors" />
-                <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg">
-                  <Cube size={24} weight="fill" className="text-white" />
-                </div>
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="w-10 h-10 bg-primary flex items-center justify-center">
+                <Cube size={20} weight="fill" className="text-primary-foreground" />
               </div>
-              <span className="text-2xl font-bold">Gnosis</span>
+              <span className="text-2xl font-semibold">Gnosis</span>
             </Link>
           </div>
 
@@ -133,14 +130,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/20 rounded-xl blur-md group-hover:bg-primary/30 transition-colors" />
-              <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg">
-                <Cube size={24} weight="fill" className="text-white" />
-              </div>
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-10 h-10 bg-primary flex items-center justify-center">
+              <Cube size={20} weight="fill" className="text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold">Gnosis</span>
+            <span className="text-2xl font-semibold">Gnosis</span>
           </Link>
         </div>
 
