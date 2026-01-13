@@ -6,7 +6,7 @@
  * Configuration for account, API keys, and preferences.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import {
@@ -65,9 +65,13 @@ const POPULAR_MODELS = [
 export default function SettingsPage() {
   const searchParams = useSearchParams()
   const { user, signOut } = useAuth()
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, resolvedTheme } = useTheme()
   const { usage, loading: usageLoading, refresh: refreshUsage } = useUsage()
   const supabase = createClient()
+
+  // Track if component is mounted to avoid hydration mismatch with theme
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   // Success message from URL (e.g., after email change)
   const successMessage = searchParams.get('message')
@@ -613,7 +617,7 @@ export default function SettingsPage() {
               <FieldLabel>Theme</FieldLabel>
               <div className="flex gap-2 mt-2">
                 <Button
-                  variant={theme === 'light' ? 'default' : 'outline'}
+                  variant={mounted && theme === 'light' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setTheme('light')}
                   className="flex-1"
@@ -622,7 +626,7 @@ export default function SettingsPage() {
                   Light
                 </Button>
                 <Button
-                  variant={theme === 'dark' ? 'default' : 'outline'}
+                  variant={mounted && theme === 'dark' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setTheme('dark')}
                   className="flex-1"
@@ -631,7 +635,7 @@ export default function SettingsPage() {
                   Dark
                 </Button>
                 <Button
-                  variant={theme === 'system' ? 'default' : 'outline'}
+                  variant={mounted && theme === 'system' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setTheme('system')}
                   className="flex-1"
@@ -678,10 +682,8 @@ export default function SettingsPage() {
                 </p>
               </div>
               <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm">
-                    Delete Account
-                  </Button>
+                <AlertDialogTrigger variant="destructive" size="sm">
+                  Delete Account
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
