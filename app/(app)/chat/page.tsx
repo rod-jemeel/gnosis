@@ -122,7 +122,7 @@ export default function NewChatPage() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Chat Panel */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Document Selector Header */}
         <div className="h-12 px-4 border-b flex items-center gap-3 shrink-0 bg-background">
           <div className="flex items-center gap-2 w-[280px] h-8 px-2.5 border border-input rounded-none text-xs bg-transparent">
@@ -135,7 +135,7 @@ export default function NewChatPage() {
               value={selectedDocumentId || 'all'}
               onValueChange={(value) => setSelectedDocumentId(value === 'all' ? null : value)}
             >
-              <SelectTrigger className="h-full border-0 px-0 w-full focus-visible:ring-0 text-foreground no-underline">
+              <SelectTrigger className="h-full border-0 px-0 w-full bg-transparent focus-visible:ring-0 text-foreground no-underline">
                 <span className="truncate no-underline">
                   {selectedDocumentId
                     ? selectedDocument?.name || 'Loading...'
@@ -221,7 +221,7 @@ export default function NewChatPage() {
                     </div>
                     <div className="flex flex-col gap-1 max-w-[80%]">
                       <span className="text-xs font-medium text-muted-foreground px-1">
-                        Aether
+                        Gnosis
                       </span>
                       <div className="rounded-2xl px-4 py-3 bg-muted/50 border border-border/50 rounded-bl-md">
                         <div className="space-y-2">
