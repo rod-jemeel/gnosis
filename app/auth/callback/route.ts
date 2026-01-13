@@ -18,9 +18,10 @@ export async function GET(request: Request) {
   const type = searchParams.get('type')
   const next = searchParams.get('next') ?? '/documents'
 
-  // Handle code exchange (OAuth, magic link, etc.)
+  const supabase = await createClient()
+
+  // Handle code exchange (OAuth, magic link with PKCE, etc.)
   if (code) {
-    const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
@@ -36,45 +37,44 @@ export async function GET(request: Request) {
     }
   }
 
-  // Handle token hash (for email confirmations)
+  // Handle token hash (for email confirmations and magic links)
   if (token_hash) {
-    const supabase = await createClient()
+    // Map URL type to Supabase OTP type
+    const otpTypeMap: Record<string, 'recovery' | 'email_change' | 'signup' | 'magiclink' | 'email'> = {
+      'recovery': 'recovery',
+      'email': 'email_change',
+      'email_change': 'email_change',
+      'signup': 'signup',
+      'magiclink': 'magiclink',
+    }
 
-    if (type === 'recovery') {
-      // Password recovery - verify and redirect to reset page
+    const otpType = type ? otpTypeMap[type] : 'magiclink' // Default to magiclink if no type
+
+    if (otpType) {
       const { error } = await supabase.auth.verifyOtp({
         token_hash,
-        type: 'recovery',
+        type: otpType,
       })
+
       if (!error) {
-        return NextResponse.redirect(`${origin}/reset-password`)
-      }
-    } else if (type === 'email') {
-      // Email change confirmation
-      const { error } = await supabase.auth.verifyOtp({
-        token_hash,
-        type: 'email_change',
-      })
-      if (!error) {
-        return NextResponse.redirect(`${origin}/settings?message=Email updated successfully`)
-      }
-    } else if (type === 'signup') {
-      // Signup confirmation
-      const { error } = await supabase.auth.verifyOtp({
-        token_hash,
-        type: 'signup',
-      })
-      if (!error) {
+        if (otpType === 'recovery') {
+          return NextResponse.redirect(`${origin}/reset-password`)
+        }
+        if (otpType === 'email_change') {
+          return NextResponse.redirect(`${origin}/settings?message=Email updated successfully`)
+        }
         return NextResponse.redirect(`${origin}${next}`)
       }
-    } else if (type === 'magiclink') {
-      // Magic link login
-      const { error } = await supabase.auth.verifyOtp({
-        token_hash,
-        type: 'magiclink',
-      })
-      if (!error) {
-        return NextResponse.redirect(`${origin}${next}`)
+
+      // If magiclink failed, try as email (some Supabase versions use 'email' type)
+      if (otpType === 'magiclink') {
+        const { error: emailError } = await supabase.auth.verifyOtp({
+          token_hash,
+          type: 'email',
+        })
+        if (!emailError) {
+          return NextResponse.redirect(`${origin}${next}`)
+        }
       }
     }
   }
