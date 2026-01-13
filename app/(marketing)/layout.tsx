@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Cube, SignOut, Gear, Moon, Sun } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,10 @@ export default function MarketingLayout({
 }) {
   const { user, loading, signOut } = useAuth()
   const { setTheme, resolvedTheme } = useTheme()
+
+  // Prevent hydration mismatch with theme
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   const userInitials = user?.email
     ? user.email.substring(0, 2).toUpperCase()
@@ -47,9 +52,9 @@ export default function MarketingLayout({
             <button
               onClick={toggleTheme}
               className="flex items-center justify-center h-8 w-8 rounded-md border border-border/50 hover:bg-accent transition-colors"
-              title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              {resolvedTheme === 'dark' ? (
+              {mounted && resolvedTheme === 'dark' ? (
                 <Sun size={18} className="text-foreground" />
               ) : (
                 <Moon size={18} className="text-foreground" />

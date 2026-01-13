@@ -74,11 +74,19 @@ function DropdownMenuItem({
   className,
   inset,
   variant = "default",
+  asChild,
+  children,
   ...props
 }: MenuPrimitive.Item.Props & {
   inset?: boolean
   variant?: "default" | "destructive"
+  asChild?: boolean
 }) {
+  // If asChild is true and children is a single element, use render prop
+  const renderProps = asChild && React.isValidElement(children)
+    ? { render: children }
+    : { children }
+
   return (
     <MenuPrimitive.Item
       data-slot="dropdown-menu-item"
@@ -89,6 +97,7 @@ function DropdownMenuItem({
         className
       )}
       {...props}
+      {...renderProps}
     />
   )
 }
