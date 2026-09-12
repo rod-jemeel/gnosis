@@ -518,6 +518,7 @@ function SidebarMenuButton({
 
   // When no tooltip, use useRender directly
   if (!tooltip) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- vendored base-ui pattern (hook after conditional return)
     return useRender({
       defaultTagName: "button",
       props: mergeProps<"button">(

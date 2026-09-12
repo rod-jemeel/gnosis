@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { Cube, SignOut, Gear, Moon, Sun } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/lib/auth'
@@ -24,8 +23,11 @@ export default function MarketingLayout({
   const { setTheme, resolvedTheme } = useTheme()
 
   // Prevent hydration mismatch with theme
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   const userInitials = user?.email
     ? user.email.substring(0, 2).toUpperCase()

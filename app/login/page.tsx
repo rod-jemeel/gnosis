@@ -34,6 +34,11 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    if (!supabase) {
+      setError('Authentication is not configured — this deployment runs in demo mode.')
+      setLoading(false)
+      return
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -54,6 +59,11 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    if (!supabase) {
+      setError('Authentication is not configured — this deployment runs in demo mode.')
+      setLoading(false)
+      return
+    }
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -281,7 +291,7 @@ export default function LoginPage() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    We'll send you a sign-in link. No password needed.
+                    We&apos;ll send you a sign-in link. No password needed.
                   </p>
                 </div>
 
@@ -325,15 +335,8 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          By signing in, you agree to our{' '}
-          <Link href="/terms" className="text-primary hover:underline">
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link href="/privacy" className="text-primary hover:underline">
-            Privacy Policy
-          </Link>
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Workspace access is membership-based. Sessions stay private to their creator.
         </p>
       </div>
     </div>

@@ -3,20 +3,36 @@
 /**
  * Auth Context
  *
- * Provides authentication state throughout the app.
+ * Provides authentication state throughout the app. When Supabase is
+ * configured, real Supabase sessions are used. Otherwise the app runs
+ * in demo mode with a local, clearly-labeled demo identity so the
+ * evidence workflow can be exercised without any backend.
  */
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/client'
-import { setWorkspaceId } from '@/lib/api/client'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/client'
+
+export interface AppUser {
+  id: string
+  email: string | null
+  isDemo: boolean
+}
 
 interface AuthContextType {
-  user: User | null
+  user: AppUser | null
   session: Session | null
   loading: boolean
   signOut: () => Promise<void>
-  workspaceId: string | null
+  /** Supabase access token for backend calls; null in demo mode. */
+  accessToken: string | null
+  isDemo: boolean
+}
+
+const DEMO_USER: AppUser = {
+  id: '00000000-0000-4000-8000-0000000000d0',
+  email: 'demo@gnosis.local',
+  isDemo: true,
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -24,48 +40,62 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   signOut: async () => {},
-  workspaceId: null,
+  accessToken: null,
+  isDemo: false,
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const supabase = useMemo(() => createClient(), [])
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const [loading, setLoading] = useState(isSupabaseConfigured())
 
   useEffect(() => {
-    // Get initial session
+    if (!supabase) {
+      return
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      setUser(session?.user ?? null)
-      // Set workspace ID synchronously before setting loading to false
-      setWorkspaceId(session?.user?.id ?? null)
       setLoading(false)
     })
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      setUser(session?.user ?? null)
-      // Set workspace ID synchronously
-      setWorkspaceId(session?.user?.id ?? null)
       setLoading(false)
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase])
+
+  const user: AppUser | null = supabase
+    ? session?.user
+      ? {
+          id: session.user.id,
+          email: session.user.email ?? null,
+          isDemo: false,
+        }
+      : null
+    : DEMO_USER
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    if (supabase) {
+      await supabase.auth.signOut()
+    }
   }
 
-  // Use user ID as workspace ID (1 user = 1 workspace for MVP)
-  const workspaceId = user?.id ?? null
-
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, workspaceId }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        signOut,
+        accessToken: session?.access_token ?? null,
+        isDemo: !isSupabaseConfigured(),
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

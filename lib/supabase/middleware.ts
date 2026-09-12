@@ -1,13 +1,26 @@
 /**
  * Supabase Middleware Client
  *
- * For use in Next.js middleware to refresh auth tokens.
+ * Refreshes auth tokens and guards protected routes. When Supabase is
+ * not configured the app runs in demo mode and every route stays
+ * accessible under a local demo identity.
  */
 
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+export function isSupabaseConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  )
+}
+
 export async function updateSession(request: NextRequest) {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -41,7 +54,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protected routes - redirect to login if not authenticated
-  const protectedPaths = ['/documents', '/chat', '/settings']
+  const protectedPaths = ['/documents', '/chat', '/settings', '/diagnostics']
   const isProtectedPath = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   )

@@ -1,7 +1,3 @@
-/**
- * Documents Components
- */
-
-export { DocumentUpload } from './document-upload'
 export { DocumentCard } from './document-card'
-export { DocumentList } from './document-list'
+export { TagBadge } from './tag-badge'
+export { useDocumentUpload, STAGE_LABELS } from './use-upload'

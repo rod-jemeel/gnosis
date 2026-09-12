@@ -5,7 +5,6 @@
  */
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Spinner, Check } from '@phosphor-icons/react'
 import { createClient } from '@/lib/supabase/client'
@@ -15,7 +14,6 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
 export default function SignupPage() {
-  const router = useRouter()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -29,6 +27,11 @@ export default function SignupPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    if (!supabase) {
+      setError('Authentication is not configured — this deployment runs in demo mode.')
+      setLoading(false)
+      return
+    }
 
     const { error } = await supabase.auth.signUp({
       email,

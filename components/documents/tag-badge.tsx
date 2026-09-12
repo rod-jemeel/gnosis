@@ -1,24 +1,20 @@
 'use client'
 
 /**
- * Tag Badge Component
- *
- * Displays a colored tag badge. Can be clickable for filtering.
+ * Tag badge — deterministic color from the tag name.
  */
 
 import { X } from '@phosphor-icons/react'
-import { Tag } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface TagBadgeProps {
-  tag: Tag
+  name: string
   onClick?: () => void
   onRemove?: () => void
   selected?: boolean
   size?: 'sm' | 'default'
 }
 
-// Default colors for tags without a custom color
 const defaultColors = [
   { bg: 'bg-violet-100 dark:bg-violet-950', text: 'text-violet-700 dark:text-violet-300', border: 'border-violet-200 dark:border-violet-800' },
   { bg: 'bg-blue-100 dark:bg-blue-950', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800' },
@@ -28,35 +24,13 @@ const defaultColors = [
   { bg: 'bg-cyan-100 dark:bg-cyan-950', text: 'text-cyan-700 dark:text-cyan-300', border: 'border-cyan-200 dark:border-cyan-800' },
 ]
 
-type TagColorResult = {
-  bg: string
-  text: string
-  border: string
-  style?: React.CSSProperties
-}
-
-function getTagColor(tag: Tag): TagColorResult {
-  if (tag.color) {
-    // Use custom color with lower opacity for background
-    return {
-      bg: '',
-      text: '',
-      border: '',
-      style: {
-        backgroundColor: `${tag.color}20`,
-        color: tag.color,
-        borderColor: `${tag.color}40`,
-      },
-    }
-  }
-  // Use consistent color based on tag name hash
-  const hash = tag.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+function getTagColor(name: string) {
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
   return defaultColors[hash % defaultColors.length]
 }
 
-export function TagBadge({ tag, onClick, onRemove, selected, size = 'default' }: TagBadgeProps) {
-  const colorClasses = getTagColor(tag)
-  const hasCustomColor = !!tag.color
+export function TagBadge({ name, onClick, onRemove, selected, size = 'default' }: TagBadgeProps) {
+  const colorClasses = getTagColor(name)
 
   return (
     <span
@@ -66,18 +40,21 @@ export function TagBadge({ tag, onClick, onRemove, selected, size = 'default' }:
         size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-xs',
         onClick && 'cursor-pointer hover:opacity-80',
         selected && 'ring-2 ring-primary ring-offset-1',
-        !hasCustomColor && [colorClasses.bg, colorClasses.text, colorClasses.border]
+        colorClasses.bg,
+        colorClasses.text,
+        colorClasses.border
       )}
-      style={hasCustomColor ? colorClasses.style : undefined}
     >
-      {tag.name}
+      {name}
       {onRemove && (
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation()
             onRemove()
           }}
-          className="ml-0.5 -mr-0.5 p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10"
+          className="-mr-0.5 ml-0.5 rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10"
+          aria-label={`Remove tag ${name}`}
         >
           <X size={10} weight="bold" />
         </button>

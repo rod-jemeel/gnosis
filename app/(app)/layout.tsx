@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { AppSidebar } from '@/components/layout'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { WorkspaceProvider } from '@/lib/workspace'
 
 export default async function AppLayout({
   children,
@@ -11,11 +12,13 @@ export default async function AppLayout({
   const defaultOpen = cookieStore.get('sidebar_state')?.value === 'true'
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar />
-      <SidebarInset>
-        <main className="flex-1 overflow-auto">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    <WorkspaceProvider>
+      <SidebarProvider defaultOpen={defaultOpen}>
+        <AppSidebar />
+        <SidebarInset>
+          <main className="h-svh overflow-hidden">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </WorkspaceProvider>
   )
 }
