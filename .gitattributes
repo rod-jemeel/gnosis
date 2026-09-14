@@ -1,0 +1,3 @@
+# Vendored third-party runtime assets — exclude from language stats
+public/pdfjs/** linguist-vendored
+pnpm-lock.yaml linguist-generated
