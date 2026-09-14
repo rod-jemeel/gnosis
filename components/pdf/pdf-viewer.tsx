@@ -5,15 +5,32 @@
  *
  * Renders original file bytes fetched through the authorized client.
  * Page numbers are 1-based physical pages, matching the evidence
- * contract. Evidence passages are highlighted by matching the quote
- * against the page's rendered text layer at view time — the highlight
- * is derived from the actual on-page text, never from invented
- * coordinates.
+ * contract. Zoom is fit-to-width by default with a multiplicative
+ * user multiplier (50%–300%); the canvas re-renders at the computed
+ * width so text stays crisp at every level. Evidence passages are
+ * highlighted by matching the quote against the page's rendered text
+ * layer at view time — derived from the actual on-page text, never
+ * from invented coordinates.
  */
 
-import { useState, useImperativeHandle, forwardRef, useCallback, useEffect, useRef } from 'react'
+import {
+  useState,
+  useImperativeHandle,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react'
 import dynamic from 'next/dynamic'
-import { Spinner, Warning, CaretLeft, CaretRight } from '@phosphor-icons/react'
+import {
+  Spinner,
+  Warning,
+  CaretLeft,
+  CaretRight,
+  MagnifyingGlassPlus,
+  MagnifyingGlassMinus,
+  FrameCorners,
+} from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 
 // Dynamically import react-pdf components (client-only)
@@ -41,9 +58,16 @@ if (typeof window !== 'undefined') {
 // Static options must stay referentially stable to avoid PDF reloads.
 const DOCUMENT_OPTIONS = { standardFontDataUrl: '/pdfjs/standard_fonts/' }
 
+const ZOOM_MIN = 0.5
+const ZOOM_MAX = 3
+const ZOOM_STEP = 1.25
+/** Horizontal padding of the scroll container (p-4 on both sides). */
+const CONTAINER_PADDING = 32
+
 export interface PdfViewerRef {
   goToPage: (pageNumber: number) => void
   getCurrentPage: () => number
+  setZoom: (zoom: number) => void
 }
 
 interface PdfViewerProps {
@@ -63,12 +87,10 @@ const HIT_CLASS = 'gnosis-evidence-hit'
  * Match a quote against the page's text-layer spans. Normalization
  * removes all non-alphanumerics, so differences in whitespace,
  * punctuation, ligatures, and mid-word span splits cannot break the
- * match.
+ * match. Falls back to progressively shorter prefixes; below ~12
+ * squeezed characters a prefix is too ambiguous to try.
  */
-function highlightQuote(
-  container: HTMLElement,
-  quote: string
-): boolean {
+function highlightQuote(container: HTMLElement, quote: string): boolean {
   const spans = Array.from(
     container.querySelectorAll<HTMLElement>('.react-pdf__Page__textContent span')
   ).filter((span) => span.textContent && span.textContent.trim().length > 0)
@@ -118,23 +140,58 @@ function highlightQuote(
 }
 
 export const PdfViewer = forwardRef<PdfViewerRef, PdfViewerProps>(
-  function PdfViewer({ fileUrl, error, initialPage = 1, highlightText, onReady, className }, ref) {
+  function PdfViewer(
+    { fileUrl, error, initialPage = 1, highlightText, onReady, className },
+    ref
+  ) {
     const [numPages, setNumPages] = useState(0)
     const [currentPage, setCurrentPage] = useState(initialPage)
     const [loadError, setLoadError] = useState<string | null>(null)
+    const [zoom, setZoomState] = useState(1)
+    const [containerWidth, setContainerWidth] = useState(0)
     // Page count as a ref so goToPage never reads a stale closure value
     // when called from onReady in the same tick as load success.
     const numPagesRef = useRef(0)
     const containerRef = useRef<HTMLDivElement | null>(null)
 
+    // Fit-to-width base: measure the scroll container, re-measure on
+    // resize so "fit" always means the current panel width.
+    useEffect(() => {
+      const container = containerRef.current
+      if (!container) return
+      const measure = () =>
+        setContainerWidth(Math.max(0, container.clientWidth - CONTAINER_PADDING))
+      measure()
+      const observer = new ResizeObserver(measure)
+      observer.observe(container)
+      return () => observer.disconnect()
+    }, [])
+
+    const clampZoom = (value: number) =>
+      Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Number(value.toFixed(2))))
+
+    const zoomIn = useCallback(
+      () => setZoomState((prev) => clampZoom(prev * ZOOM_STEP)),
+      []
+    )
+    const zoomOut = useCallback(
+      () => setZoomState((prev) => clampZoom(prev / ZOOM_STEP)),
+      []
+    )
+    const zoomFit = useCallback(() => setZoomState(1), [])
+
     // Expose methods via ref
-    useImperativeHandle(ref, () => ({
-      goToPage: (pageNumber: number) => {
-        const pages = numPagesRef.current || Number.MAX_SAFE_INTEGER
-        setCurrentPage(Math.max(1, Math.min(pageNumber, pages)))
-      },
-      getCurrentPage: () => currentPage,
-    }))
+    useImperativeHandle(
+      ref,
+      () => ({
+        goToPage: (pageNumber: number) => {
+          const pages = numPagesRef.current || Number.MAX_SAFE_INTEGER
+          setCurrentPage(Math.max(1, Math.min(pageNumber, pages)))
+        },
+        getCurrentPage: () => currentPage,
+        setZoom: (value: number) => setZoomState(clampZoom(value)),
+      })
+    )
 
     const onDocumentLoadSuccess = useCallback(
       ({ numPages }: { numPages: number }) => {
@@ -162,12 +219,14 @@ export const PdfViewer = forwardRef<PdfViewerRef, PdfViewerProps>(
       setNumPages(0)
       setLoadError(null)
       setCurrentPage(initialPage)
+      setZoomState(1)
     }
 
     // Highlight the cited passage once the text layer of the current
     // page has painted. The text layer renders asynchronously (and
     // slowly on first render), so watch for it instead of polling on a
-    // short timer.
+    // short timer. Zooming re-renders the layer, so zoom participates
+    // in the dependencies and the highlight reapplies after every zoom.
     useEffect(() => {
       const container = containerRef.current
       if (!container || !highlightText) return
@@ -190,7 +249,7 @@ export const PdfViewer = forwardRef<PdfViewerRef, PdfViewerProps>(
         clearTimeout(stop)
         clear()
       }
-    }, [highlightText, currentPage, fileUrl])
+    }, [highlightText, currentPage, fileUrl, zoom, containerWidth])
 
     const shownError = error ?? loadError
 
@@ -204,37 +263,88 @@ export const PdfViewer = forwardRef<PdfViewerRef, PdfViewerProps>(
       )
     }
 
+    // Canvas renders at the measured container width scaled by the user
+    // zoom; until first measurement, react-pdf's natural size is used.
+    const pageWidth = containerWidth > 0 ? Math.floor(containerWidth * zoom) : undefined
+
     return (
       <div className={`flex h-full flex-col ${className}`}>
-        {/* Page Navigation */}
-        <div className="flex items-center justify-center gap-2 border-b bg-background py-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            disabled={currentPage <= 1}
-            className="h-8 w-8 p-0"
-            aria-label="Previous page"
-          >
-            <CaretLeft size={16} />
-          </Button>
-          <span className="min-w-[100px] text-center text-sm text-muted-foreground">
-            Page {currentPage} of {numPages || '…'}
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCurrentPage((prev) => Math.min(numPages, prev + 1))}
-            disabled={!numPages || currentPage >= numPages}
-            className="h-8 w-8 p-0"
-            aria-label="Next page"
-          >
-            <CaretRight size={16} />
-          </Button>
+        {/* Toolbar: page navigation + zoom controls */}
+        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-b bg-background px-2 py-2">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage <= 1}
+              aria-label="Previous page"
+            >
+              <CaretLeft size={16} />
+            </Button>
+            <span className="min-w-[92px] text-center text-xs text-muted-foreground">
+              Page {currentPage} of {numPages || '…'}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setCurrentPage((prev) => Math.min(numPages, prev + 1))}
+              disabled={!numPages || currentPage >= numPages}
+              aria-label="Next page"
+            >
+              <CaretRight size={16} />
+            </Button>
+          </div>
+
+          <div className="mx-1 hidden h-5 w-px bg-border sm:block" />
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={zoomOut}
+              disabled={zoom <= ZOOM_MIN}
+              aria-label="Zoom out"
+              title="Zoom out"
+            >
+              <MagnifyingGlassMinus size={15} />
+            </Button>
+            <button
+              type="button"
+              onClick={zoomFit}
+              className="min-w-[48px] border border-transparent px-1 py-0.5 text-center text-xs tabular-nums text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
+              title="Zoom: fit width (click to reset)"
+              aria-label={`Zoom ${Math.round(zoom * 100)} percent. Click to reset to fit width.`}
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={zoomIn}
+              disabled={zoom >= ZOOM_MAX}
+              aria-label="Zoom in"
+              title="Zoom in"
+            >
+              <MagnifyingGlassPlus size={15} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={zoomFit}
+              disabled={zoom === 1}
+              aria-label="Reset zoom to fit width"
+              title="Fit width"
+            >
+              <FrameCorners size={15} />
+            </Button>
+          </div>
         </div>
 
         {/* PDF Content */}
-        <div ref={containerRef} className="flex flex-1 justify-center overflow-auto bg-muted/30 p-4">
+        <div
+          ref={containerRef}
+          className="flex flex-1 justify-center overflow-auto bg-muted/30 p-4"
+        >
           {!fileUrl && (
             <div className="flex flex-col items-center justify-center">
               <Spinner size={32} className="mb-2 animate-spin text-primary" />
@@ -256,13 +366,17 @@ export const PdfViewer = forwardRef<PdfViewerRef, PdfViewerProps>(
               }
             >
               <Page
-                key={currentPage}
+                key={`${currentPage}-${pageWidth ?? 'natural'}`}
                 pageNumber={currentPage}
+                width={pageWidth}
                 renderTextLayer={true}
                 renderAnnotationLayer={true}
                 className="shadow-lg"
                 loading={
-                  <div className="flex h-[800px] w-[600px] items-center justify-center bg-white">
+                  <div
+                    className="flex items-center justify-center bg-white"
+                    style={pageWidth ? { width: pageWidth, height: (pageWidth * 11) / 8.5 } : { width: 600, height: 800 }}
+                  >
                     <Spinner size={24} className="animate-spin text-primary" />
                   </div>
                 }

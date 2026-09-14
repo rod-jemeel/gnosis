@@ -442,10 +442,10 @@ export function ChatView({ sessionId: initialSessionId }: ChatViewProps) {
                   text={pendingQuestion}
                   scopeLabel={scopeLabel(scope, docNames)}
                 />
-                <div className="border bg-card p-4">
+                <div className="border-2 border-foreground bg-card p-4 shadow-[4px_4px_0_0_var(--foreground)]">
                   <div className="mb-3 flex items-center gap-2">
-                    <div className="flex size-6 items-center justify-center bg-primary/15">
-                      <Cube size={13} weight="fill" className="text-primary" />
+                    <div className="flex size-6 items-center justify-center bg-primary text-primary-foreground">
+                      <Cube size={13} weight="fill" />
                     </div>
                     <span className="text-xs font-medium">Gnosis</span>
                   </div>
@@ -535,7 +535,7 @@ function UserBubble({ text, scopeLabel }: { text: string; scopeLabel: string }) 
   return (
     <div className="flex justify-end">
       <div className="max-w-[85%] space-y-1">
-        <div className="bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground">
+        <div className="border-2 border-foreground bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground shadow-[3px_3px_0_0_var(--foreground)]">
           {text}
         </div>
         <p className="text-right text-[10px] text-muted-foreground">Scope: {scopeLabel}</p>
@@ -557,10 +557,10 @@ function TurnView({
     <div className="space-y-4">
       <UserBubble text={turn.user.text} scopeLabel={scopeLabel(turn.user.scope, docNames)} />
 
-      <div className="border bg-card p-4">
+      <div className="stagger-in border-2 border-foreground bg-card p-4 shadow-[4px_4px_0_0_var(--foreground)]">
         <div className="mb-3 flex items-center gap-2">
-          <div className="flex size-6 items-center justify-center bg-primary/15">
-            <Cube size={13} weight="fill" className="text-primary" />
+          <div className="flex size-6 items-center justify-center bg-primary text-primary-foreground">
+            <Cube size={13} weight="fill" />
           </div>
           <span className="text-xs font-medium">Gnosis</span>
         </div>
@@ -616,13 +616,14 @@ function EmptyState({
           <p className="text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             Try the curated demo questions
           </p>
-          <div className="mx-auto grid max-w-xl gap-2 sm:grid-cols-2">
-            {DEMO_SUGGESTIONS.map((suggestion) => (
+          <div className="mx-auto grid max-w-xl gap-3 sm:grid-cols-2">
+            {DEMO_SUGGESTIONS.map((suggestion, index) => (
               <button
                 key={suggestion.question}
                 type="button"
                 onClick={() => onSuggest(suggestion.question)}
-                className="border bg-card p-3 text-left transition-colors hover:border-primary/50 hover:bg-primary/5"
+                className="stagger-in border-2 border-foreground bg-card p-3 text-left shadow-[3px_3px_0_0_var(--foreground)] transition-[transform,box-shadow] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-x-px hover:-translate-y-px hover:shadow-[4px_4px_0_0_var(--foreground)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+                style={{ animationDelay: `${index * 45}ms` }}
               >
                 <p className="text-xs font-medium leading-snug">{suggestion.question}</p>
                 <p className="mt-1 text-[10px] leading-snug text-muted-foreground">

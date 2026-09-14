@@ -40,7 +40,7 @@ export function BuildStateBadge({ state, className }: { state: BuildState; class
   const label = BUILD_LABELS[state]
   if (state === 'ready') {
     return (
-      <Badge variant="secondary" className={cn('gap-1 text-emerald-700 dark:text-emerald-400', className)}>
+      <Badge variant="secondary" className={cn('gap-1', className)}>
         <CheckCircle size={12} weight="fill" />
         {label}
       </Badge>

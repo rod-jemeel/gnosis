@@ -203,7 +203,7 @@ export default function DocumentDetailPage({
       <div className="mx-auto max-w-4xl px-4 py-16 text-center">
         <Warning size={40} className="mx-auto mb-4 text-destructive" />
         <p className="mb-4 text-sm text-muted-foreground">{error}</p>
-        <Button variant="outline" render={<Link href="/documents" />}>
+        <Button variant="outline" nativeButton={false} render={<Link href="/documents" />}>
           <ArrowLeft size={14} className="mr-1.5" />
           Back to documents
         </Button>
@@ -225,7 +225,7 @@ export default function DocumentDetailPage({
       {/* Header */}
       <div className="border-b bg-background">
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon-xs" render={<Link href="/documents" />} title="Back">
+          <Button variant="ghost" size="icon-xs" nativeButton={false} render={<Link href="/documents" />} title="Back">
             <ArrowLeft size={14} />
           </Button>
           <div className="min-w-0 flex-1">
@@ -461,7 +461,7 @@ export default function DocumentDetailPage({
                     >
                       <span className="font-medium">rev {v.revisionNumber}</span>
                       {v.id === detail.activeVersion?.id && (
-                        <Badge variant="secondary" className="text-emerald-700 dark:text-emerald-400">
+                        <Badge variant="secondary">
                           <Check size={10} />
                           active
                         </Badge>

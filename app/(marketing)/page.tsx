@@ -38,7 +38,7 @@ export default function HomePage() {
         <div className="absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
 
         <div className="relative max-w-2xl text-center">
-          <div className="mb-6 inline-flex animate-in fade-in slide-in-from-bottom-4 duration-700 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
+          <div className="mb-6 inline-flex animate-in fade-in slide-in-from-bottom-4 duration-700 rotate-[-1.5deg] items-center gap-2 border-2 border-foreground bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground shadow-[3px_3px_0_0_var(--foreground)]">
             <ShieldCheck size={14} weight="fill" />
             <span>Evidence-first document Q&amp;A</span>
           </div>
@@ -122,7 +122,7 @@ export default function HomePage() {
                 className="group flex animate-in fade-in slide-in-from-bottom-4 flex-col items-center p-4 text-center duration-700"
                 style={{ animationDelay: `${(i + 1) * 100}ms` }}
               >
-                <div className="mb-3 flex h-12 w-12 items-center justify-center bg-primary/10 text-primary transition-all group-hover:scale-110 group-hover:bg-primary/20">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center border-2 border-foreground bg-secondary text-secondary-foreground shadow-[2px_2px_0_0_var(--foreground)] transition-transform duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-0.5">
                   {step.icon}
                 </div>
                 <h3 className="mb-1 font-medium">{step.title}</h3>
@@ -201,9 +201,9 @@ export default function HomePage() {
       <section className="relative overflow-hidden border-t border-border/50 px-4 py-12">
         <div className="absolute left-1/2 top-0 h-[200px] w-[800px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
         <div className="relative mx-auto max-w-2xl text-center">
-          <div className="mb-3 inline-flex animate-in fade-in slide-in-from-bottom-4 items-center gap-2 duration-700">
-            <Flask size={18} className="text-amber-500" />
-            <span className="text-sm font-medium">Portfolio project — scope and limits</span>
+          <div className="mb-3 inline-flex rotate-[1deg] animate-in fade-in slide-in-from-bottom-4 items-center gap-2 border-2 border-foreground bg-secondary px-3 py-1.5 duration-700 shadow-[3px_3px_0_0_var(--foreground)]">
+            <Flask size={18} className="text-secondary-foreground" />
+            <span className="text-sm font-medium text-secondary-foreground">Portfolio project — scope and limits</span>
           </div>
           <p className="mx-auto mb-6 max-w-xl animate-in fade-in slide-in-from-bottom-4 text-sm leading-relaxed text-muted-foreground delay-100">
             Gnosis is built for small technical teams consulting documentation and runbooks:
@@ -227,7 +227,9 @@ export default function HomePage() {
       <footer className="mt-auto border-t border-border/50 py-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <Cube size={16} weight="fill" className="text-primary" />
+            <span className="flex size-6 items-center justify-center border-2 border-foreground bg-primary text-primary-foreground shadow-[2px_2px_0_0_var(--foreground)]">
+              <Cube size={13} weight="fill" />
+            </span>
             <span className="text-sm font-medium">Gnosis</span>
           </div>
           <p className="text-xs text-muted-foreground">Evidence-first document Q&amp;A</p>
@@ -247,7 +249,7 @@ function OutcomeCard({
   body: string
 }) {
   return (
-    <div className="border border-border/50 bg-card/50 p-5 transition-all duration-300 hover:border-border hover:bg-card">
+    <div className="neo-lift border-2 border-foreground bg-card p-5 shadow-[4px_4px_0_0_var(--foreground)]">
       <div className="mb-2 flex items-center gap-2">
         {icon}
         <h3 className="text-sm font-medium">{title}</h3>
@@ -267,8 +269,8 @@ function DetailCard({
   body: string
 }) {
   return (
-    <div className="group border border-border/50 bg-card/50 p-5 transition-all duration-300 hover:border-border hover:bg-card">
-      <div className="mb-3 flex h-10 w-10 items-center justify-center bg-primary/10 text-primary transition-all group-hover:scale-110">
+    <div className="neo-lift group border-2 border-foreground bg-card p-5 shadow-[4px_4px_0_0_var(--foreground)]">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center border-2 border-foreground bg-primary text-primary-foreground shadow-[2px_2px_0_0_var(--foreground)] transition-transform duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-0.5">
         {icon}
       </div>
       <h3 className="mb-1 text-sm font-medium">{title}</h3>

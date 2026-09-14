@@ -49,72 +49,75 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
+  --background: oklch(0.985 0.004 95);
+  --foreground: oklch(0.17 0.01 285);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
+  --card-foreground: oklch(0.17 0.01 285);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.51 0.23 277);
-  --primary-foreground: oklch(0.96 0.02 272);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.51 0.23 277);
-  --accent-foreground: oklch(0.96 0.02 272);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
+  --popover-foreground: oklch(0.17 0.01 285);
+  --primary: oklch(0.55 0.24 277);
+  --primary-foreground: oklch(0.98 0.01 272);
+  --secondary: oklch(0.87 0.17 88);
+  --secondary-foreground: oklch(0.17 0.01 285);
+  --muted: oklch(0.955 0.006 95);
+  --muted-foreground: oklch(0.44 0.015 285);
+  --accent: oklch(0.87 0.17 88);
+  --accent-foreground: oklch(0.17 0.01 285);
+  --destructive: oklch(0.58 0.24 27);
+  --border: oklch(0.17 0.01 285);
+  --input: oklch(0.17 0.01 285);
+  --ring: oklch(0.55 0.24 277);
   --chart-1: oklch(0.79 0.10 275);
   --chart-2: oklch(0.68 0.16 277);
   --chart-3: oklch(0.59 0.20 277);
   --chart-4: oklch(0.51 0.23 277);
   --chart-5: oklch(0.46 0.21 277);
-  --radius: 0.125rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.51 0.23 277);
-  --sidebar-primary-foreground: oklch(0.96 0.02 272);
-  --sidebar-accent: oklch(0.96 0.01 277);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
+  --radius: 0rem;
+  --sidebar: oklch(0.955 0.006 95);
+  --sidebar-foreground: oklch(0.17 0.01 285);
+  --sidebar-primary: oklch(0.55 0.24 277);
+  --sidebar-primary-foreground: oklch(0.98 0.01 272);
+  --sidebar-accent: oklch(0.87 0.17 88);
+  --sidebar-accent-foreground: oklch(0.17 0.01 285);
+  --sidebar-border: oklch(0.17 0.01 285);
+  --sidebar-ring: oklch(0.55 0.24 277);
+  /* Motion tokens (Emil: strong custom curves, UI stays under 300ms). */
+  --ease-neo: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-move: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.59 0.20 277);
-  --primary-foreground: oklch(0.96 0.02 272);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.59 0.20 277);
-  --accent-foreground: oklch(0.96 0.02 272);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
+  --background: oklch(0.185 0.01 285);
+  --foreground: oklch(0.965 0.005 95);
+  --card: oklch(0.235 0.012 285);
+  --card-foreground: oklch(0.965 0.005 95);
+  --popover: oklch(0.235 0.012 285);
+  --popover-foreground: oklch(0.965 0.005 95);
+  --primary: oklch(0.64 0.21 277);
+  --primary-foreground: oklch(0.14 0.01 285);
+  --secondary: oklch(0.83 0.16 88);
+  --secondary-foreground: oklch(0.17 0.01 285);
+  --muted: oklch(0.27 0.012 285);
+  --muted-foreground: oklch(0.72 0.012 285);
+  --accent: oklch(0.83 0.16 88);
+  --accent-foreground: oklch(0.17 0.01 285);
+  --destructive: oklch(0.7 0.19 22);
+  --border: oklch(0.9 0.005 95);
+  --input: oklch(0.9 0.005 95);
+  --ring: oklch(0.64 0.21 277);
   --chart-1: oklch(0.79 0.10 275);
   --chart-2: oklch(0.68 0.16 277);
   --chart-3: oklch(0.59 0.20 277);
   --chart-4: oklch(0.51 0.23 277);
   --chart-5: oklch(0.46 0.21 277);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.68 0.16 277);
-  --sidebar-primary-foreground: oklch(0.96 0.02 272);
-  --sidebar-accent: oklch(0.28 0.02 277);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  --sidebar: oklch(0.21 0.012 285);
+  --sidebar-foreground: oklch(0.965 0.005 95);
+  --sidebar-primary: oklch(0.64 0.21 277);
+  --sidebar-primary-foreground: oklch(0.14 0.01 285);
+  --sidebar-accent: oklch(0.3 0.02 285);
+  --sidebar-accent-foreground: oklch(0.965 0.005 95);
+  --sidebar-border: oklch(0.9 0.005 95);
+  --sidebar-ring: oklch(0.64 0.21 277);
 }
 
 @layer base {
@@ -126,69 +129,128 @@
   }
 }
 
-/* Custom utility classes for enhanced UI */
-@layer utilities {
-  .gradient-text {
-    @apply bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent;
-  }
+/* ------------------------------------------------------------------ */
+/* Neubrutalism interaction system                                     */
+/*                                                                     */
+/* Physical design language: hard offset shadows (no blur), press an   */
+/* element into its shadow. Motion follows the house rules — transform */
+/* and box-shadow only, 150ms strong ease-out, hover lifts gated to    */
+/* fine pointers, press feedback for every pointer.                    */
+/* ------------------------------------------------------------------ */
 
-  .gradient-bg {
-    @apply bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5;
+.neo {
+  box-shadow: 3px 3px 0 0 var(--foreground);
+  transition:
+    transform 150ms var(--ease-neo),
+    box-shadow 150ms var(--ease-neo);
+}
+.neo-sm {
+  box-shadow: 2px 2px 0 0 var(--foreground);
+  transition:
+    transform 150ms var(--ease-neo),
+    box-shadow 150ms var(--ease-neo);
+}
+@media (hover: hover) and (pointer: fine) {
+  /* Lift away from the surface on hover. */
+  .neo:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 0 var(--foreground);
   }
-
-  .gradient-border {
-    @apply relative before:absolute before:inset-0 before:rounded-[inherit] before:p-[1px] before:bg-gradient-to-br before:from-primary/20 before:to-purple-500/20 before:-z-10;
+  .neo-sm:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 0 var(--foreground);
   }
+}
+/* Press the element flat into its shadow. Active works for every
+   pointer — touch users get the same confirmation. */
+.neo:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 0 var(--foreground);
+}
+.neo-sm:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 var(--foreground);
+}
+.neo:disabled,
+.neo-sm:disabled {
+  transform: none;
+}
 
-  .glass {
-    @apply bg-background/80 backdrop-blur-md border border-border/50;
-  }
-
-  .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5;
-  }
-
-  .animate-gradient {
-    background-size: 200% 200%;
-    animation: gradient-shift 8s ease infinite;
-  }
-
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .animate-pulse-subtle {
-    animation: pulse-subtle 3s ease-in-out infinite;
-  }
-
-  .animate-marquee {
-    animation: marquee 30s linear infinite;
-  }
-
-  .animate-marquee:hover {
-    animation-play-state: paused;
+/* Hover-only lift for non-pressable surfaces (cards). */
+.neo-lift {
+  transition:
+    transform 180ms var(--ease-neo),
+    box-shadow 180ms var(--ease-neo);
+}
+@media (hover: hover) and (pointer: fine) {
+  .neo-lift:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 0 var(--foreground);
   }
 }
 
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-33.333%); }
+/* Entrance: rise 8px with fade; staggered via inline animation-delay. */
+.stagger-in {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: neo-in 240ms var(--ease-neo) forwards;
+}
+@keyframes neo-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+@media (prefers-reduced-motion: reduce) {
+  .neo,
+  .neo-sm,
+  .neo-lift {
+    transition:
+      opacity 150ms ease,
+      box-shadow 150ms ease;
+  }
+  .neo:hover,
+  .neo-sm:hover,
+  .neo-lift:hover {
+    transform: none;
+  }
+  .stagger-in {
+    animation: neo-fade 150ms ease forwards;
+  }
+  @keyframes neo-fade {
+    to {
+      opacity: 1;
+    }
+  }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+/* Popup surfaces: 1px solid edge + hard offset shadow (two shadow
+   layers so the border look never shifts layout). */
+[data-slot="popover-content"],
+[data-slot="dropdown-menu-content"],
+[data-slot="select-content"],
+[data-slot="tooltip-content"] {
+  box-shadow:
+    0 0 0 1px var(--foreground),
+    4px 4px 0 0 var(--foreground);
 }
 
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+/* Popovers scale from their trigger (Base UI sets --transform-origin).
+   Modals stay centered — they have no anchor. */
+[data-slot="popover-content"],
+[data-slot="dropdown-menu-content"],
+[data-slot="select-content"],
+[data-slot="tooltip-content"] {
+  transform-origin: var(--transform-origin, center);
 }
+
+/* Sidebar active item: a hard shadow reads as "selected" without
+   shifting layout. */
+[data-sidebar="menu-button"][data-active="true"] {
+  box-shadow: 2px 2px 0 0 var(--sidebar-foreground);
+}
+
 /* Evidence passage highlight in the PDF.js text layer (computed from the
    on-page text at view time — not stored coordinates). */
 .react-pdf__Page__textContent span.gnosis-evidence-hit {

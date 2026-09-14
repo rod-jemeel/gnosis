@@ -23,7 +23,7 @@ export function DocumentCard({ document: doc, onDelete, deleting }: DocumentCard
   const router = useRouter()
 
   return (
-    <div className="group border bg-card p-4 transition-colors hover:border-primary/40">
+    <div className="neo-lift group border-2 border-foreground bg-card p-4 shadow-[3px_3px_0_0_var(--foreground)]">
       <div className="flex items-start gap-3">
         <div className="flex size-9 shrink-0 items-center justify-center bg-primary/10">
           <FilePdf size={18} weight="duotone" className="text-primary" />
