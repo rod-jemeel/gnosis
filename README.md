@@ -102,8 +102,11 @@ version folder (the app resolves the path from `pdfjs.version` at runtime).
 
 ## Related
 
+- **Backend: [rod-jemeel/gnosis-api](https://github.com/rod-jemeel/gnosis-api)** —
+  the Hono + BullMQ + PostgreSQL/pgvector server implementing the `/v2`
+  contract this app speaks, with self-hosted ONNX embeddings by default.
 - `docs/supabase-setup.md` — SQL for optional Supabase usage logging and
   account deletion RPCs.
-- Backend contract: `/v2` endpoints under `lib/v2/http.ts` mirror the full
-  product specification (workspaces, uploads, documents, builds, sessions,
-  runs, evidence, diagnostics).
+- Backend contract types: `/v2` endpoints under `lib/v2/http.ts` mirror the
+  full product specification (workspaces, uploads, documents, builds,
+  sessions, runs, evidence, diagnostics).
