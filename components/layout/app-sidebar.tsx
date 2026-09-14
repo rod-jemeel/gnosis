@@ -3,10 +3,12 @@
 /**
  * App Sidebar
  *
- * Main navigation sidebar with document upload, chat history, and user controls.
+ * Main navigation: menu (Chat, Documents, Diagnostics, Settings),
+ * private chat sessions, document upload with stage-based progress,
+ * and user controls.
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -27,17 +29,15 @@ import {
   Trash,
   Moon,
   Sun,
+  Pulse,
+  Warning,
 } from '@phosphor-icons/react'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/lib/auth'
-import {
-  uploadDocument,
-  waitForDocumentReady,
-  listChatSessions,
-  createChatSession,
-  deleteChatSession,
-} from '@/lib/api'
-import { ChatSession } from '@/lib/types'
+import { useWorkspace } from '@/lib/workspace'
+import { demoStore } from '@/lib/v2'
+import type { ChatSessionSummary } from '@/lib/v2'
+import { useDocumentUpload, STAGE_LABELS } from '@/components/documents/use-upload'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import {
@@ -67,46 +67,37 @@ import {
 
 const navItems = [
   { href: '/', label: 'Home', icon: House },
+  { href: '/chat', label: 'Chat', icon: Chat },
   { href: '/documents', label: 'Documents', icon: Files },
+  { href: '/diagnostics', label: 'Diagnostics', icon: Pulse },
   { href: '/settings', label: 'Settings', icon: Gear },
 ]
 
-// Sidebar Upload Dropzone
+// Sidebar Upload Dropzone: durable upload flow with stage-based state.
 function SidebarUploadZone() {
   const router = useRouter()
   const { state } = useSidebar()
+  const { workspace } = useWorkspace()
   const [dragActive, setDragActive] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'processing' | 'done'>('idle')
+  const { items, uploadFiles } = useDocumentUpload()
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const active = items[items.length - 1]
+  const busy = active && (active.phase === 'uploading' || active.phase === 'ingesting')
+
+  useEffect(() => {
+    if (active?.phase === 'done') {
+      const timer = setTimeout(() => router.push('/documents'), 800)
+      return () => clearTimeout(timer)
+    }
+  }, [active?.phase, router])
 
   const handleFiles = useCallback(
-    async (files: FileList) => {
-      const pdfFiles = Array.from(files).filter((f) => f.type === 'application/pdf')
-      if (pdfFiles.length === 0) return
-
-      setUploading(true)
-      setUploadStatus('uploading')
-
-      try {
-        for (const file of pdfFiles) {
-          const result = await uploadDocument(file)
-          setUploadStatus('processing')
-          await waitForDocumentReady(result.documentId)
-        }
-        setUploadStatus('done')
-        setTimeout(() => {
-          setUploadStatus('idle')
-          setUploading(false)
-          router.push('/documents')
-          router.refresh()
-        }, 1000)
-      } catch (error) {
-        console.error('Upload failed:', error)
-        setUploadStatus('idle')
-        setUploading(false)
-      }
+    (files: FileList) => {
+      if (!workspace) return
+      void uploadFiles(files)
     },
-    [router]
+    [uploadFiles, workspace]
   )
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -131,16 +122,19 @@ function SidebarUploadZone() {
     [handleFiles]
   )
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files) {
-        handleFiles(e.target.files)
-      }
-    },
-    [handleFiles]
-  )
-
   const isCollapsed = state === 'collapsed'
+
+  const statusText = () => {
+    if (!active) return dragActive ? 'Drop PDF' : 'Upload PDF'
+    if (active.phase === 'uploading') return 'Uploading bytes…'
+    if (active.phase === 'ingesting') {
+      return active.buildStage
+        ? STAGE_LABELS[active.buildStage]
+        : 'Starting ingestion…'
+    }
+    if (active.phase === 'done') return 'Indexed'
+    return active.error ?? 'Failed'
+  }
 
   return (
     <SidebarGroup className="px-2 py-0">
@@ -148,9 +142,13 @@ function SidebarUploadZone() {
         type="file"
         accept="application/pdf"
         multiple
-        onChange={handleInputChange}
+        onChange={(e) => {
+          if (e.target.files) handleFiles(e.target.files)
+          e.target.value = ''
+        }}
         className="hidden"
         id="sidebar-file-upload"
+        ref={inputRef}
       />
       <label
         htmlFor="sidebar-file-upload"
@@ -162,135 +160,114 @@ function SidebarUploadZone() {
           'flex cursor-pointer border border-dashed transition-all',
           isCollapsed
             ? 'aspect-square items-center justify-center p-2'
-            : 'flex-col items-center gap-1 py-2 px-3',
+            : 'flex-col items-center gap-1 px-3 py-2',
           dragActive
             ? 'border-primary bg-primary/10'
             : 'border-sidebar-border hover:border-primary/50 hover:bg-sidebar-accent/50',
-          uploading && 'pointer-events-none'
+          busy && 'pointer-events-none'
         )}
       >
-        {uploading ? (
-          <>
-            {uploadStatus === 'done' ? (
-              <Check size={isCollapsed ? 16 : 18} className="text-emerald-500" weight="bold" />
-            ) : (
-              <Spinner size={isCollapsed ? 16 : 18} className="animate-spin text-primary" />
-            )}
-            {!isCollapsed && (
-              <span className="text-[10px] text-muted-foreground">
-                {uploadStatus === 'uploading' && 'Uploading...'}
-                {uploadStatus === 'processing' && 'Processing...'}
-                {uploadStatus === 'done' && 'Done!'}
-              </span>
-            )}
-          </>
+        {active && active.phase !== 'done' ? (
+          active.phase === 'error' ? (
+            <Warning size={isCollapsed ? 16 : 18} weight="fill" className="text-destructive" />
+          ) : (
+            <Spinner size={isCollapsed ? 16 : 18} className="animate-spin text-primary" />
+          )
+        ) : active?.phase === 'done' ? (
+          <Check size={isCollapsed ? 16 : 18} className="text-emerald-500" weight="bold" />
         ) : (
-          <>
-            <CloudArrowUp
-              size={isCollapsed ? 16 : 18}
-              weight="duotone"
-              className={cn(
-                'transition-colors',
-                dragActive ? 'text-primary' : 'text-muted-foreground'
-              )}
-            />
-            {!isCollapsed && (
-              <span className="text-[10px] text-muted-foreground text-center">
-                {dragActive ? 'Drop PDF' : 'Upload PDF'}
-              </span>
+          <CloudArrowUp
+            size={isCollapsed ? 16 : 18}
+            weight="duotone"
+            className={cn(
+              'transition-colors',
+              dragActive ? 'text-primary' : 'text-muted-foreground'
             )}
-          </>
+          />
+        )}
+        {!isCollapsed && (
+          <span
+            className={cn(
+              'text-center text-[10px]',
+              active?.phase === 'error' ? 'text-destructive' : 'text-muted-foreground'
+            )}
+          >
+            {statusText()}
+          </span>
         )}
       </label>
     </SidebarGroup>
   )
 }
 
-// Chat History Section
+// Chat History Section: the caller's private sessions.
 function SidebarChatHistory() {
   const router = useRouter()
   const pathname = usePathname()
   const { state } = useSidebar()
-  const { workspaceId, loading: authLoading } = useAuth()
-  const [sessions, setSessions] = useState<ChatSession[]>([])
+  const { client, workspace, loading: wsLoading } = useWorkspace()
+  const [sessions, setSessions] = useState<ChatSessionSummary[]>([])
   const [loading, setLoading] = useState(true)
+  const workspaceRef = useRef(workspace)
+  workspaceRef.current = workspace
 
-  // Fetch sessions from database
+  const demoVersion = useSyncExternalStore(
+    demoStore.subscribe,
+    () => demoStore.version,
+    () => 0
+  )
+
   const fetchSessions = useCallback(async () => {
-    if (!workspaceId) {
+    const ws = workspaceRef.current
+    if (!ws) {
       setLoading(false)
       return
     }
     try {
-      const result = await listChatSessions(5, 0)
-      setSessions(result.data)
-    } catch (error) {
-      // Silently fail - API might not be available yet
-      console.error('Failed to load chat sessions:', error)
+      const page = await client.listSessions(ws.id)
+      setSessions(page.items.slice(0, 6))
+    } catch {
       setSessions([])
     } finally {
       setLoading(false)
     }
-  }, [workspaceId])
+  }, [client])
 
   useEffect(() => {
-    if (!authLoading) {
-      if (workspaceId) {
-        fetchSessions()
-      } else {
-        setLoading(false)
-      }
-    }
-  }, [authLoading, workspaceId, fetchSessions, pathname])
+    if (!wsLoading) void fetchSessions()
+  }, [wsLoading, fetchSessions, pathname])
 
-  const handleNewChat = async () => {
-    if (!workspaceId) {
-      router.push('/chat')
-      return
-    }
-    try {
-      await createChatSession({ title: 'New Chat' })
-      await fetchSessions()
-      router.push('/chat')
-    } catch (error) {
-      console.error('Failed to create chat session:', error)
-      router.push('/chat')
-    }
+  useEffect(() => {
+    if (demoVersion > 0) void fetchSessions()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoVersion])
+
+  const handleNewChat = () => {
+    router.push('/chat')
   }
 
   const handleDeleteSession = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
     e.preventDefault()
+    const ws = workspaceRef.current
+    if (!ws) return
     try {
-      await deleteChatSession(id)
+      await client.deleteSession(ws.id, id)
       setSessions((prev) => prev.filter((s) => s.id !== id))
-    } catch (error) {
-      console.error('Failed to delete chat session:', error)
+    } catch {
+      // Session already gone.
     }
   }
 
   const isCollapsed = state === 'collapsed'
-  const isOnChatRoute = pathname === '/chat' || pathname.startsWith('/chat/')
 
   if (isCollapsed) {
     return (
       <SidebarGroup className="py-0">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="New Chat"
-              onClick={handleNewChat}
-            >
+            <SidebarMenuButton onClick={handleNewChat} tooltip="New Chat">
               <Plus size={18} />
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              render={<Link href="/chat" />}
-              isActive={isOnChatRoute}
-              tooltip="Chat"
-            >
-              <Chat size={18} weight={isOnChatRoute ? 'fill' : 'regular'} />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -300,27 +277,22 @@ function SidebarChatHistory() {
 
   return (
     <SidebarGroup className="py-0">
-      <SidebarGroupLabel className="text-[10px]">
-        Chat History
-      </SidebarGroupLabel>
+      <SidebarGroupLabel className="text-[10px]">Chats</SidebarGroupLabel>
       <SidebarGroupAction title="New Chat" onClick={handleNewChat}>
         <Plus size={14} />
       </SidebarGroupAction>
       <SidebarGroupContent>
         <SidebarMenu>
-          {loading || authLoading ? (
+          {loading || wsLoading ? (
             <SidebarMenuItem>
               <SidebarMenuButton disabled>
                 <Spinner size={14} className="animate-spin" />
-                <span className="text-muted-foreground">Loading...</span>
+                <span className="text-muted-foreground">Loading…</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : sessions.length === 0 ? (
             <SidebarMenuItem>
-              <SidebarMenuButton
-                render={<Link href="/chat" />}
-                isActive={pathname === '/chat'}
-              >
+              <SidebarMenuButton onClick={handleNewChat}>
                 <Chat size={16} />
                 <span className="text-muted-foreground">Start a new chat</span>
               </SidebarMenuButton>
@@ -340,7 +312,7 @@ function SidebarChatHistory() {
                     <span className="truncate text-xs">{session.title}</span>
                   </SidebarMenuButton>
                   <SidebarMenuAction
-                    onClick={(e) => handleDeleteSession(session.id, e)}
+                    onClick={(e) => void handleDeleteSession(session.id, e)}
                     showOnHover
                     className="text-muted-foreground hover:text-destructive"
                   >
@@ -363,18 +335,15 @@ function SidebarToggle() {
 
   return (
     <button
+      type="button"
       onClick={toggleSidebar}
       className={cn(
-        'flex items-center justify-center h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors',
+        'flex h-6 w-6 items-center justify-center text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground',
         isCollapsed && 'mx-auto'
       )}
       title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
     >
-      {isCollapsed ? (
-        <CaretLineRight size={14} />
-      ) : (
-        <CaretLineLeft size={14} />
-      )}
+      {isCollapsed ? <CaretLineRight size={14} /> : <CaretLineLeft size={14} />}
     </button>
   )
 }
@@ -385,24 +354,13 @@ export function AppSidebar() {
   const { state } = useSidebar()
   const { setTheme, resolvedTheme } = useTheme()
 
-  const handleSignOut = async () => {
-    await signOut()
-  }
-
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
-  }
-
-  const userInitials = user?.email
-    ? user.email.substring(0, 2).toUpperCase()
-    : 'U'
-
+  const userInitials = user?.email ? user.email.substring(0, 2).toUpperCase() : 'U'
   const isCollapsed = state === 'collapsed'
 
   return (
     <Sidebar collapsible="icon">
       {/* Header - Logo & Toggle */}
-      <SidebarHeader className={cn("flex-row items-center py-2", isCollapsed ? "justify-center px-0" : "justify-between")}>
+      <SidebarHeader className={cn('flex-row items-center py-2', isCollapsed ? 'justify-center px-0' : 'justify-between')}>
         {isCollapsed ? (
           <Link href="/" className="flex items-center justify-center" title="Gnosis">
             <div className="flex aspect-square size-7 items-center justify-center bg-primary text-primary-foreground">
@@ -414,10 +372,10 @@ export function AppSidebar() {
             <SidebarMenu className="flex-1">
               <SidebarMenuItem>
                 <SidebarMenuButton size="default" render={<Link href="/" />} tooltip="Gnosis">
-                  <div className="flex aspect-square size-6 items-center justify-center bg-primary text-primary-foreground shrink-0">
+                  <div className="flex aspect-square size-6 shrink-0 items-center justify-center bg-primary text-primary-foreground">
                     <Cube size={14} weight="fill" />
                   </div>
-                  <span className="font-semibold text-xs">Gnosis</span>
+                  <span className="text-xs font-semibold">Gnosis</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -434,9 +392,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => {
                 const Icon = item.icon
-                const isActive = item.href === '/'
-                  ? pathname === '/'
-                  : pathname.startsWith(item.href)
+                const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
 
                 return (
                   <SidebarMenuItem key={item.href}>
@@ -483,26 +439,21 @@ export function AppSidebar() {
                   }
                 >
                   <Avatar className="h-6 w-6">
-                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                    <AvatarFallback className="bg-primary/10 text-[10px] text-primary">
                       {userInitials}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="truncate font-medium text-xs">
+                  <span className="truncate text-xs font-medium">
                     {user.email?.split('@')[0]}
                   </span>
                   <CaretUpDown size={12} className="ml-auto text-muted-foreground" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="min-w-44"
-                  side="top"
-                  align="start"
-                  sideOffset={4}
-                >
+                <DropdownMenuContent className="min-w-44" side="top" align="start" sideOffset={4}>
                   <DropdownMenuItem render={<Link href="/settings" />}>
                     <Gear size={14} className="mr-2" />
                     Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={toggleTheme}>
+                  <DropdownMenuItem onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
                     {resolvedTheme === 'dark' ? (
                       <Sun size={14} className="mr-2" />
                     ) : (
@@ -511,9 +462,17 @@ export function AppSidebar() {
                     {resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (user.isDemo) {
+                        routerReset()
+                      } else {
+                        void signOut()
+                      }
+                    }}
+                  >
                     <SignOut size={14} className="mr-2" />
-                    Sign out
+                    {user.isDemo ? 'Reset demo data' : 'Sign out'}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -536,4 +495,9 @@ export function AppSidebar() {
       <SidebarRail />
     </Sidebar>
   )
+}
+
+function routerReset() {
+  demoStore.reset()
+  window.location.href = window.location.origin + '/documents'
 }

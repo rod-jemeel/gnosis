@@ -1,12 +1,27 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Cube, FileText, ChatCircle, Target, Key, Database, Lock, Flask } from '@phosphor-icons/react'
+import {
+  ArrowRight,
+  Cube,
+  FileText,
+  ChatCircle,
+  MagnifyingGlass,
+  Quotes,
+  CheckCircle,
+  Warning,
+  ArrowsCounterClockwise,
+  Prohibit,
+  Clock,
+  ShieldCheck,
+  Flask,
+  GitBranch,
+} from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex min-h-screen flex-col">
       {/* Dotted Background Pattern */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
         <div
@@ -19,20 +34,19 @@ export default function HomePage() {
       </div>
 
       {/* Hero */}
-      <section className="flex-1 flex items-center justify-center px-4 py-20 md:py-28 relative">
-        {/* Subtle glow effect */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/5 rounded-full blur-3xl" />
+      <section className="relative flex flex-1 items-center justify-center px-4 py-20 md:py-28">
+        <div className="absolute left-1/2 top-1/2 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
 
-        <div className="max-w-2xl text-center relative">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium rounded-full border border-amber-500/20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <Flask size={14} weight="fill" />
-            <span>Proof of Concept</span>
+        <div className="relative max-w-2xl text-center">
+          <div className="mb-6 inline-flex animate-in fade-in slide-in-from-bottom-4 duration-700 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
+            <ShieldCheck size={14} weight="fill" />
+            <span>Evidence-first document Q&amp;A</span>
           </div>
 
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-            RAG over PDFs with{' '}
-            <span className="text-primary relative inline-block">
-              citations
+          <h1 className="mb-4 animate-in fade-in slide-in-from-bottom-4 text-3xl font-bold tracking-tight delay-100 md:text-4xl lg:text-5xl">
+            Answers you can{' '}
+            <span className="relative inline-block text-primary">
+              verify
               <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none">
                 <path
                   d="M1 5.5C47 2.5 153 2.5 199 5.5"
@@ -45,15 +59,16 @@ export default function HomePage() {
             </span>
           </h1>
 
-          <p className="text-muted-foreground mb-8 max-w-lg mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-            Upload documents, ask questions, get answers with page-level citations.
-            A minimal implementation of retrieval-augmented generation.
+          <p className="mx-auto mb-8 max-w-lg animate-in fade-in slide-in-from-bottom-4 text-muted-foreground delay-200">
+            Gnosis answers questions from an authorized document collection — and shows the
+            exact passage, revision, and physical page behind every claim. When the documents
+            don&apos;t answer, it says so.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-            <Link href="/documents">
-              <Button size="lg" className="gap-2 w-full sm:w-auto group">
-                Try it out
+          <div className="flex animate-in fade-in slide-in-from-bottom-4 flex-col justify-center gap-3 delay-300 sm:flex-row">
+            <Link href="/chat">
+              <Button size="lg" className="group w-full gap-2 sm:w-auto">
+                Try the curated demo
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
@@ -63,130 +78,144 @@ export default function HomePage() {
               </Button>
             </Link>
           </div>
+
+          <p className="mt-4 animate-in fade-in slide-in-from-bottom-4 text-xs text-muted-foreground delay-500">
+            The demo runs on a curated corpus in your browser — no account needed.
+          </p>
         </div>
       </section>
 
-      {/* How it works */}
+      {/* The evidence workflow */}
       <section className="border-t border-border/50 bg-muted/30 px-4 py-16">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-xl font-semibold mb-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">How it works</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="flex flex-col items-center text-center p-4 group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '100ms' }}>
-              <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3 transition-all group-hover:scale-110 group-hover:bg-primary/20">
-                <FileText size={22} />
+        <div className="mx-auto max-w-3xl">
+          <h2 className="mb-2 animate-in fade-in slide-in-from-bottom-4 text-center text-xl font-semibold duration-700">
+            The evidence workflow
+          </h2>
+          <p className="mx-auto mb-8 max-w-md animate-in fade-in slide-in-from-bottom-4 text-center text-sm text-muted-foreground delay-100">
+            Ask with an explicit scope; inspect what actually supports the answer.
+          </p>
+          <div className="grid gap-6 md:grid-cols-4">
+            {[
+              {
+                icon: <ChatCircle size={22} />,
+                title: '1. Ask with scope',
+                body: 'Choose all current documents or an explicit selection. An empty selection never silently means everything.',
+              },
+              {
+                icon: <MagnifyingGlass size={22} />,
+                title: '2. Retrieve and fuse',
+                body: 'Lexical and semantic candidates are rank-fused, optionally reranked, and budgeted — with every candidate recorded.',
+              },
+              {
+                icon: <Quotes size={22} />,
+                title: '3. Validate claims',
+                body: 'Strict mode checks each material claim against the retrieved passages before anything is shown.',
+              },
+              {
+                icon: <FileText size={22} />,
+                title: '4. Inspect the source',
+                body: 'Citations open the exact stored passage with document revision and physical PDF page — never a paraphrase.',
+              },
+            ].map((step, i) => (
+              <div
+                key={step.title}
+                className="group flex animate-in fade-in slide-in-from-bottom-4 flex-col items-center p-4 text-center duration-700"
+                style={{ animationDelay: `${(i + 1) * 100}ms` }}
+              >
+                <div className="mb-3 flex h-12 w-12 items-center justify-center bg-primary/10 text-primary transition-all group-hover:scale-110 group-hover:bg-primary/20">
+                  {step.icon}
+                </div>
+                <h3 className="mb-1 font-medium">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.body}</p>
               </div>
-              <h3 className="font-medium mb-1">1. Upload</h3>
-              <p className="text-sm text-muted-foreground">
-                Drop your PDFs. They get chunked and embedded into vectors.
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center p-4 group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '200ms' }}>
-              <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3 transition-all group-hover:scale-110 group-hover:bg-primary/20">
-                <ChatCircle size={22} />
-              </div>
-              <h3 className="font-medium mb-1">2. Ask</h3>
-              <p className="text-sm text-muted-foreground">
-                Query your documents in natural language via chat.
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center p-4 group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '300ms' }}>
-              <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3 transition-all group-hover:scale-110 group-hover:bg-primary/20">
-                <Target size={22} />
-              </div>
-              <h3 className="font-medium mb-1">3. Cite</h3>
-              <p className="text-sm text-muted-foreground">
-                Get answers with citations that jump to the exact PDF page.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Data Ownership */}
+      {/* Honest outcomes */}
       <section className="border-t border-border/50 px-4 py-16">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-xl font-semibold mb-2 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">Own your data</h2>
-          <p className="text-sm text-muted-foreground text-center mb-8 max-w-md mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-            Bring your own API keys. Your documents and embeddings stay under your control.
+        <div className="mx-auto max-w-3xl">
+          <h2 className="mb-2 animate-in fade-in slide-in-from-bottom-4 text-center text-xl font-semibold duration-700">
+            Honest outcomes, not confident guesses
+          </h2>
+          <p className="mx-auto mb-8 max-w-lg animate-in fade-in slide-in-from-bottom-4 text-center text-sm text-muted-foreground delay-100">
+            Missing evidence is reported as missing evidence — never as &quot;the fact is
+            false.&quot;
           </p>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="p-5 rounded-xl border border-border/50 bg-card/50 hover:bg-card hover:border-border transition-all duration-300 group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '100ms' }}>
-              <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-3 transition-all group-hover:scale-110">
-                <Key size={20} weight="duotone" />
-              </div>
-              <h3 className="font-medium text-sm mb-1">Your API Keys</h3>
-              <p className="text-xs text-muted-foreground">
-                Use your own OpenAI, Anthropic, or other LLM provider keys. We never store them unencrypted.
-              </p>
-            </div>
-            <div className="p-5 rounded-xl border border-border/50 bg-card/50 hover:bg-card hover:border-border transition-all duration-300 group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '175ms' }}>
-              <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-3 transition-all group-hover:scale-110">
-                <Database size={20} weight="duotone" />
-              </div>
-              <h3 className="font-medium text-sm mb-1">Your Vector Store</h3>
-              <p className="text-xs text-muted-foreground">
-                Optionally bring your own Pinecone index. Embeddings live in your namespace.
-              </p>
-            </div>
-            <div className="p-5 rounded-xl border border-border/50 bg-card/50 hover:bg-card hover:border-border transition-all duration-300 group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '250ms' }}>
-              <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-3 transition-all group-hover:scale-110">
-                <Lock size={20} weight="duotone" />
-              </div>
-              <h3 className="font-medium text-sm mb-1">Tenant Isolated</h3>
-              <p className="text-xs text-muted-foreground">
-                All queries are scoped to your workspace. No cross-tenant data leakage.
-              </p>
-            </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <OutcomeCard
+              icon={<CheckCircle size={18} weight="fill" className="text-emerald-500" />}
+              title="Answered"
+              body="Every material claim carries a valid reference to authorized evidence, or it is qualified or removed."
+            />
+            <OutcomeCard
+              icon={<Clock size={18} weight="fill" className="text-amber-500" />}
+              title="Partially answered"
+              body="When documents cover only part of the question, the answer says exactly which part is missing."
+            />
+            <OutcomeCard
+              icon={<ArrowsCounterClockwise size={18} weight="bold" className="text-rose-500" />}
+              title="Conflicting sources"
+              body="When revisions disagree, both statements are shown with their revisions — no invented resolution."
+            />
+            <OutcomeCard
+              icon={<Prohibit size={18} weight="fill" className="text-slate-500" />}
+              title="Insufficient evidence"
+              body="If nothing in scope answers the question, the result says so — even when retrieval returned passages."
+            />
           </div>
         </div>
       </section>
 
-      {/* Technical Details */}
+      {/* Version awareness */}
       <section className="border-t border-border/50 bg-muted/30 px-4 py-16">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-xl font-semibold mb-2 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">Under the hood</h2>
-          <p className="text-sm text-muted-foreground text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-            A straightforward RAG pipeline with no magic.
+        <div className="mx-auto max-w-3xl">
+          <h2 className="mb-2 animate-in fade-in slide-in-from-bottom-4 text-center text-xl font-semibold duration-700">
+            Version-aware, by design
+          </h2>
+          <p className="mx-auto mb-8 max-w-lg animate-in fade-in slide-in-from-bottom-4 text-center text-sm text-muted-foreground delay-100">
+            Source revisions are immutable; answers remember the snapshot they used.
           </p>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-5 rounded-xl border border-border/50 bg-card/50 hover:bg-card hover:border-border transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '150ms' }}>
-              <h3 className="font-medium text-sm mb-3">Ingestion</h3>
-              <ul className="text-xs text-muted-foreground space-y-1.5">
-                <li>PDF text extraction per page</li>
-                <li>Chunking with overlap</li>
-                <li>Embeddings via OpenAI or compatible</li>
-                <li>Vectors stored in Pinecone (namespaced)</li>
-              </ul>
-            </div>
-            <div className="p-5 rounded-xl border border-border/50 bg-card/50 hover:bg-card hover:border-border transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: '225ms' }}>
-              <h3 className="font-medium text-sm mb-3">Retrieval</h3>
-              <ul className="text-xs text-muted-foreground space-y-1.5">
-                <li>Query embedding + similarity search</li>
-                <li>Top-k chunks with metadata</li>
-                <li>LLM generates answer with citations</li>
-                <li>Citations link to page numbers in viewer</li>
-              </ul>
-            </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <DetailCard
+              icon={<GitBranch size={20} weight="duotone" />}
+              title="Immutable revisions"
+              body="Uploading a replacement never overwrites the bytes or evidence of the previous revision. A failed replacement never breaks the working one."
+            />
+            <DetailCard
+              icon={<ShieldCheck size={20} weight="duotone" />}
+              title="Safe activation"
+              body="A new index build becomes searchable only after its checks pass — until then, queries keep using the active build snapshot."
+            />
+            <DetailCard
+              icon={<Warning size={20} weight="duotone" />}
+              title="Observable execution"
+              body="Every run records stages, timings, candidates, and outcomes. Diagnostics show what happened without exposing private content."
+            />
           </div>
         </div>
       </section>
 
-      {/* POC Notice */}
-      <section className="border-t border-border/50 px-4 py-12 relative overflow-hidden">
-        {/* Decorative gradient */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[200px] bg-primary/5 rounded-full blur-3xl" />
-        <div className="max-w-2xl mx-auto text-center relative">
-          <div className="inline-flex items-center gap-2 mb-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Scope notice */}
+      <section className="relative overflow-hidden border-t border-border/50 px-4 py-12">
+        <div className="absolute left-1/2 top-0 h-[200px] w-[800px] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl" />
+        <div className="relative mx-auto max-w-2xl text-center">
+          <div className="mb-3 inline-flex animate-in fade-in slide-in-from-bottom-4 items-center gap-2 duration-700">
             <Flask size={18} className="text-amber-500" />
-            <span className="text-sm font-medium">Proof of Concept</span>
+            <span className="text-sm font-medium">Portfolio project — scope and limits</span>
           </div>
-          <p className="text-sm text-muted-foreground mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-            This is a demonstration of RAG with citations over PDFs.
-            Built to explore the architecture, not for production use.
-            Expect rough edges.
+          <p className="mx-auto mb-6 max-w-xl animate-in fade-in slide-in-from-bottom-4 text-sm leading-relaxed text-muted-foreground delay-100">
+            Gnosis is built for small technical teams consulting documentation and runbooks:
+            text-bearing PDFs, English retrieval, workspace-scoped access. It is not an
+            autonomous research agent and does not guarantee that every answer is true — it
+            guarantees that you can inspect the evidence behind each claim.
           </p>
-          <Link href="/documents" className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 inline-block">
-            <Button variant="outline" size="sm" className="gap-2 group">
+          <Link
+            href="/chat"
+            className="inline-block animate-in fade-in slide-in-from-bottom-4 delay-200"
+          >
+            <Button variant="outline" size="sm" className="group gap-2">
               Explore the demo
               <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
             </Button>
@@ -195,17 +224,55 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-6 mt-auto">
-        <div className="max-w-3xl mx-auto px-4 flex items-center justify-between">
+      <footer className="mt-auto border-t border-border/50 py-6">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Cube size={16} weight="fill" className="text-primary" />
             <span className="text-sm font-medium">Gnosis</span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Proof of concept
-          </p>
+          <p className="text-xs text-muted-foreground">Evidence-first document Q&amp;A</p>
         </div>
       </footer>
+    </div>
+  )
+}
+
+function OutcomeCard({
+  icon,
+  title,
+  body,
+}: {
+  icon: React.ReactNode
+  title: string
+  body: string
+}) {
+  return (
+    <div className="border border-border/50 bg-card/50 p-5 transition-all duration-300 hover:border-border hover:bg-card">
+      <div className="mb-2 flex items-center gap-2">
+        {icon}
+        <h3 className="text-sm font-medium">{title}</h3>
+      </div>
+      <p className="text-xs leading-relaxed text-muted-foreground">{body}</p>
+    </div>
+  )
+}
+
+function DetailCard({
+  icon,
+  title,
+  body,
+}: {
+  icon: React.ReactNode
+  title: string
+  body: string
+}) {
+  return (
+    <div className="group border border-border/50 bg-card/50 p-5 transition-all duration-300 hover:border-border hover:bg-card">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center bg-primary/10 text-primary transition-all group-hover:scale-110">
+        {icon}
+      </div>
+      <h3 className="mb-1 text-sm font-medium">{title}</h3>
+      <p className="text-xs leading-relaxed text-muted-foreground">{body}</p>
     </div>
   )
 }

@@ -1,6 +1,5 @@
-/**
- * Chat Components
- */
-
-export { ChatMessage } from './chat-message'
+export { ChatView } from './chat-view'
 export { ChatInput } from './chat-input'
+export { ScopeSelector } from './scope-selector'
+export { RunStatus } from './run-status'
+export { AnswerMessage } from './answer-message'

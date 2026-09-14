@@ -189,3 +189,10 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.8; }
 }
+/* Evidence passage highlight in the PDF.js text layer (computed from the
+   on-page text at view time — not stored coordinates). */
+.react-pdf__Page__textContent span.gnosis-evidence-hit {
+  background-color: rgb(250 204 21 / 0.35);
+  box-shadow: 0 0 0 2px rgb(250 204 21 / 0.45);
+  border-radius: 2px;
+}

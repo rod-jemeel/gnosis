@@ -27,6 +27,11 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    if (!supabase) {
+      setError('Authentication is not configured — this deployment runs in demo mode.')
+      setLoading(false)
+      return
+    }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
@@ -113,7 +118,7 @@ export default function ForgotPasswordPage() {
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl font-bold">Forgot password?</CardTitle>
             <CardDescription className="text-base">
-              Enter your email and we'll send you a reset link
+              Enter your email and we&apos;ll send you a reset link
             </CardDescription>
           </CardHeader>
           <CardContent>
