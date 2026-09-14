@@ -9,7 +9,7 @@
  * revision look failed.
  */
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import {
   ArrowClockwise,
   CloudArrowUp,
@@ -47,6 +47,7 @@ export default function DocumentsPage() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<DocumentSummary | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const uploadInputRef = useRef<HTMLInputElement>(null)
 
   // Live updates when demo builds progress or documents change.
   const demoVersion = useSyncExternalStore(
@@ -126,23 +127,21 @@ export default function DocumentsPage() {
             <Button variant="ghost" size="icon" onClick={() => void load()} title="Refresh">
               <ArrowClockwise size={16} />
             </Button>
-            <label className="inline-flex">
-              <input
-                type="file"
-                accept="application/pdf"
-                multiple
-                className="hidden"
-                id="documents-upload"
-                onChange={(e) => {
-                  if (e.target.files) void uploadFiles(e.target.files)
-                  e.target.value = ''
-                }}
-              />
-              <Button variant="default" render={<label htmlFor="documents-upload" />}>
-                <CloudArrowUp size={16} className="mr-1.5" />
-                Upload PDF
-              </Button>
-            </label>
+            <input
+              ref={uploadInputRef}
+              type="file"
+              accept="application/pdf"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files) void uploadFiles(e.target.files)
+                e.target.value = ''
+              }}
+            />
+            <Button variant="default" onClick={() => uploadInputRef.current?.click()}>
+              <CloudArrowUp size={16} className="mr-1.5" />
+              Upload PDF
+            </Button>
           </div>
         </div>
 
