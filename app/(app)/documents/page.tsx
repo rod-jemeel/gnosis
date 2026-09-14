@@ -195,10 +195,10 @@ export default function DocumentsPage() {
               type="button"
               onClick={() => setSelectedTag(null)}
               className={cn(
-                'border px-2 py-0.5 text-xs',
+                'border-2 border-foreground px-2 py-0.5 text-xs transition-[box-shadow,transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
                 !selectedTag
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-[2px_2px_0_0_var(--foreground)]'
+                  : 'bg-background text-foreground hover:-translate-y-px hover:shadow-[2px_2px_0_0_var(--foreground)]'
               )}
             >
               All
@@ -256,13 +256,14 @@ export default function DocumentsPage() {
           </Empty>
         ) : (
           <div className="space-y-3">
-            {filtered.map((doc) => (
-              <DocumentCard
-                key={doc.id}
-                document={doc}
-                onDelete={setDeleteTarget}
-                deleting={deleting}
-              />
+            {filtered.map((doc, index) => (
+              <div key={doc.id} className="stagger-in" style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}>
+                <DocumentCard
+                  document={doc}
+                  onDelete={setDeleteTarget}
+                  deleting={deleting}
+                />
+              </div>
             ))}
           </div>
         )}

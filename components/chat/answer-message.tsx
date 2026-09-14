@@ -78,8 +78,10 @@ export function AnswerMessage({ result, onCitationClick, onRetry }: AnswerMessag
                       type="button"
                       onClick={() => onCitationClick(evidence)}
                       className={cn(
-                        'ml-0.5 inline-flex h-4 min-w-4 items-center justify-center px-1 align-[1px] text-[10px] font-semibold',
-                        'bg-primary/15 text-primary hover:bg-primary/25 transition-colors'
+                        'ml-0.5 inline-flex h-4 min-w-4 items-center justify-center border border-foreground px-1 align-[1px] text-[10px] font-semibold',
+                        'bg-secondary text-secondary-foreground shadow-[1.5px_1.5px_0_0_var(--foreground)]',
+                        'transition-[transform,box-shadow] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]',
+                        'hover:-translate-y-px hover:shadow-[2.5px_2.5px_0_0_var(--foreground)] active:translate-x-[1.5px] active:translate-y-[1.5px] active:shadow-none'
                       )}
                       title={`${evidence.documentName} — rev ${evidence.revisionNumber}, page ${evidence.physicalPage}`}
                     >

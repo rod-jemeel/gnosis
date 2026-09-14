@@ -461,7 +461,7 @@ export default function DocumentDetailPage({
                     >
                       <span className="font-medium">rev {v.revisionNumber}</span>
                       {v.id === detail.activeVersion?.id && (
-                        <Badge variant="secondary" className="text-emerald-700 dark:text-emerald-400">
+                        <Badge variant="secondary">
                           <Check size={10} />
                           active
                         </Badge>
